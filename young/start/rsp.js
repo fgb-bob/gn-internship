@@ -37,6 +37,8 @@ class Rsp {
         console.log("바위 가위 보");
         console.log(`${this.rock}   ${this.scissors}   ${this.paper}`);
         this.game_Result();
+
+        
     }
 
     //게임의 결과를 확인하는 메서드. 
