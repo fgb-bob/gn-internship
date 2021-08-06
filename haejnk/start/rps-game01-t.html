@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가위바위보 게임</title>
+</head>
+<body>
+  <h3>F12 키를 눌러 콘솔창을 확인하세요</h3>
+  <hr>
+  <script>
+    class Person {
+      constructor(name, hand) {
+        this.name = name;
+        this.hand = hand;
+      }
+
+      displayHand() {
+        return this.hand;
+      }
+    }
+
+    class Match {
+      constructor(a, b) {
+        this.a = a;
+        this.b = b;
+      }
+
+      trade(hand) {
+        if(hand === 0) {
+          return "가위";
+        } else if(hand === 1) {
+          return "바위";
+        } else if(hand === 2) {
+          return "보";
+        }
+      }
+
+      showResult(loser, winner) {
+        console.log(`${loser.name} : ${trade(loser.hand)}, ${winner.name} : ${trade(winner.hand)} \n${winner.name} 가 이겼습니다.`);
+        return winner;
+      } 
+
+      _internalMatch(f, s) {
+        if(f === 0) {
+          if(s === f + 1) {
+            showResult(p1, p2);
+          } else {
+            showResult(p2, p1);
+          }
+        }      
+      }
+
+      match(a, b) {
+        if(a === b) {
+          console.log(`${p1.name} : ${trade(aHand)}, ${p2.name} : ${trade(bHand)} \n비겼습니다.`);
+        } else if(a === 0) {
+          if(b === 1) {
+            showResult(p1, p2);
+          } else {
+            showResult(p2, p1);
+          }
+        } else if(a === 1) {
+          if(b === 0) {
+            showResult(p2, p1);
+          } else {
+            showResult(p1, p2);
+          }
+        } else if(a === 2) {
+          if(b === 0) {
+            showResult(p1, p2);
+          } else {
+            showResult(p2, p1);
+          }
+        }
+      }
+    }
+
+    
+    
+    const p1 = new Person("A", Math.floor(Math.random() * 3));
+    const p2 = new Person("B", Math.floor(Math.random() * 3));
+    const m = new Match(p1.displayHand(), p2.displayHand());
+
+  </script>
+</body>
+</html>
