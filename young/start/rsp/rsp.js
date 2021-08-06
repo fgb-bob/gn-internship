@@ -8,8 +8,7 @@ class Rsp {
         this.paper = 0;
 
         console.log("함수에 들어왔습니다.");
-        this.player_Info_Input();
-        //this.game_Result();
+        this.player_Info_Input(); //함수를 연결연결해서 사용하는 것은 좋지 않음. 응집성이 떨어지기 떄문에, 응집성 주의해서 코드 작성할 것.
     }
 
     player_Info_Input(){
@@ -17,15 +16,15 @@ class Rsp {
         this.scissors = 0;
         this.paper = 0;
 
-        for(let i=1 ; i<=player_Total; i++){
+        for(let i=1 ; i<=this.player_Total; i++){ 
             player_Info.set(i, Math.floor(Math.random()*3+1));
         }
         console.log(player_Info);
-        this.player_Result();
+        this.player_Result(); //이것도 함수응집성 유의해서 작성할 것.
     }
 
     player_Result(){
-        for(let j=0;j<player_Total;j++){
+        for(let j=0;j<this.player_Total;j++){
             if(player_Info.get(j+1) == 1){
                 this.rock++;
             } else if (player_Info.get(j+1) == 2){
@@ -37,8 +36,6 @@ class Rsp {
         console.log("바위 가위 보");
         console.log(`${this.rock}   ${this.scissors}   ${this.paper}`);
         this.game_Result();
-
-        
     }
 
     //게임의 결과를 확인하는 메서드. 
@@ -78,8 +75,9 @@ class Rsp {
 
 }
 
-const player_Total = Math.floor(Math.random()*10+2); //플레이어 수를 랜덤으로 정하는 코드. 2~10명 중에 랜덤으로 정해짐.
+const player_Total = Math.floor(Math.random()*9+2); //플레이어 수를 랜덤으로 정하는 코드. 2~10명 중에 랜덤으로 정해짐.
 const player_Info = new Map(); //플레이어의 가위, 바위, 보 결과를 값으로 map을 이용해 매칭
+// * Map을 여기서 객체 생성하는게 아니라, 클래스 안에서 생성해야함. 왜냐면, 게임 클래스 안에서만 사용하게 될 객체라서.
 
 console.log(player_Total);
 const rsp = new Rsp(player_Info, player_Total); //가위바위보 게임 클래스
