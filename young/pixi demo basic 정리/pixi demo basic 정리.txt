@@ -1,0 +1,31 @@
+Demos-Basic
+* Container
+    * Const app = new Pixi.application : Pixi.application 클래스를 이용해, 픽시 화면을 생성 
+    * document.body.appendChild(app.view) 를 이용해 화면에 출력한다.
+    * New PIXI.Container(); 로 화면에 출력할 bunny이미지를 모아넣을 컨테이너를 생성
+        * App.stage.addChild(container) 으로 app의 자식으로 container를 넣어주어야 한다.
+    * New.Texture.from(“이미지위치”) -> new pixi.sprite(texture) 를 한다.
+    * Bunny.anchor.set 으로 bunny sprite의 기준으로 위치를 정한다.
+    * Container.pivot으로 container의 기준점을 위치할 것인지.
+* Transparent Background
+    * Renderview 부모를 기준으로 background의 속성을 따른다.
+* Tinting
+    * sprite로 된 기존이미지에 색을 더하는 기능을 한다.
+        * Dude.tint = Math.random() * 0xffffff; 으로 dude의 색을 변경함.
+* CacheAsBitmap
+    * app.stage.interactive = true; 사용자와의 상호작용(입력(터치 등))을 받을 수 있게한다. 
+    * cacheAsBitmap : onClick 한 순간의 스냅샷을 찍습니다.
+    * app.stage.on(‘pointertap’,onClick); onclick라는 이름으로 선언된 함수를 stage에서 사용한다.
+        * Pointertap : 마우스를 눌렀다가 놓을 때 이벤트를 발생시킨다.
+* Particle Container
+    * 빠르게 컨테이너객체를 생성할 수 있다. 많은 양의 sprite를 필요로 할 때 사용한다.
+    * New PIXI.Rectangle(x,y,width,height) : 왼쪽 위 모서리지점 (x,y) 과 너비 및 높이로 표시되는 위치로 정의되는 영역
+* BlendModes
+    * Sprite로 생성된 객체에 blend_Modes를 추가한다.
+    * Ex) dude.blendMode = Pixi.blend_modes.add
+* SimplePlane
+    * Pixi.simplePlane(texture, verticesX, verticesY) : 여러 점에 걸쳐 이미지를 조작 할 수 있게 한다.
+    * Const buffer = plane.geometry.getBuffer(‘aVertexPosition’) : 
+    * Buffer 함수 : 인자로 받은만큼의 메모리를 잡는 함수
+    * Geometry : 기하학적인 모델을 나타낸다.
+    * Simpleplane으로 제작된 객체의 꼭지점을 geometry.getBuffer(‘aVertexPosition’)으로 불러와 buffer라는 변수에 넣는다. buffer에는 geometry.getbuffer에서 불러온 배열타입의 데이터가 저장된다. 
