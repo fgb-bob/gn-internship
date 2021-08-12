@@ -1,6 +1,6 @@
-import update from './update.js';
-//import App from './start'; 게임 시작 화면
-import App from './game'; //게임 실행 화면
+//import update from './update.js';
+import App from './start'; //게임 시작 화면
+//import game from './game'; //게임 실행 화면
 
 
 // even though Rollup is bundling all your files together, errors and

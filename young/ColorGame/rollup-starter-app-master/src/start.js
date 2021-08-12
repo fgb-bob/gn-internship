@@ -1,12 +1,15 @@
 import * as PIXI from 'pixi.js';
+import game from './game';
+//
 
 export default class {
     constructor(){
-
         //application으로 화면 생성
         const app = new PIXI.Application();
         document.body.appendChild(app.view);
 
+
+        // ------------------- 화면 구성하는 이미지들 설정 코드 ---------------------------
         //게임 배경 설정
         const background = PIXI.Sprite.from('images/bg_rotate.jpg');
         background.width = app.screen.width;
@@ -22,6 +25,7 @@ export default class {
         const button = new PIXI.Sprite(textureButton);
         button.x = app.screen.width / 2;
         button.y = app.screen.height / 2 ;
+        button.anchor.set(0.5);
         button.interactive = true;
         button.buttonMode = true;
         button
@@ -33,13 +37,15 @@ export default class {
         app.stage.addChild(button);
 
 
-        //버튼에 마우스를 올렸을 때 호출되는 동작들
+        //----------------- 버튼에 마우스를 올렸을 때 호출되는 동작들 -------------------
 
         //마우스를 눌렀을 때
         function onButtonDown(){
             this.isdown = true;
             this.texture = textureButtonDown;
-            this.alpha = 1; //이게 무슨 뜻일까요??
+            //버튼을 클릭하면 기존의 body 부분에 있던 내용은 지우고 new game.js 를 호출
+            document.body.removeChild(app.view);
+            new game();
         }
 
         //마우스클릭을 떼었을 때
