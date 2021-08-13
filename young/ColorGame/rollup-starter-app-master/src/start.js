@@ -1,13 +1,11 @@
 import * as PIXI from 'pixi.js';
 import game from './game';
-//
 
 export default class {
     constructor(){
         //application으로 화면 생성
         const app = new PIXI.Application();
         document.body.appendChild(app.view);
-
 
         // ------------------- 화면 구성하는 이미지들 설정 코드 ---------------------------
         //게임 배경 설정
@@ -35,7 +33,6 @@ export default class {
             .on('pointerover', onButtonOver)
             .on('pointerout', onButtonOut);
         app.stage.addChild(button);
-
 
         //----------------- 버튼에 마우스를 올렸을 때 호출되는 동작들 -------------------
 
