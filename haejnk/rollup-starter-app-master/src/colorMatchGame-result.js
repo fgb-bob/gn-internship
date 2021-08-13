@@ -1,5 +1,4 @@
 import * as PIXI from 'pixi.js';
-// import { PRECISION } from 'pixi.js';
 import S from './colorMatchGame-start';
 
 export default class _
@@ -8,19 +7,10 @@ export default class _
 	{
 		this.APP = APP;
 		const that = this;
-
-		let ticker = PIXI.Ticker.shared;
-		ticker.autoStart = false;
-		ticker.stop();
 		
 		if(!NEXT) {
 			return;
 		} else {
-			if(NEXT) {
-				ticker.start();
-			}
-			// PIXI.Ticker.system.stop();
-			// ticker.start();
 			const TextContainer = new PIXI.Container();
 			const rePlayBtnContainer = new PIXI.Container();
 			const rePlayContainer = new PIXI.Container();
@@ -59,6 +49,7 @@ export default class _
 			const rePlayBtn = new PIXI.Graphics();
 		
 			function reDraw(obj, lineColor, fillColor) {
+				// console.log("redraw");
 				obj.lineStyle(4, lineColor);
 				obj.beginFill(fillColor, 0.3);
 				obj.drawRoundedRect(that.APP.view.width/5 + 25, that.APP.view.height/2, 250, 80);
@@ -84,35 +75,27 @@ export default class _
 			rePlayBtn.addChild(rePlayText);
 			rePlayBtnContainer.addChild(rePlayBtn);
 			this.APP.stage.addChild(rePlayContainer);
-	
-			this.APP.ticker;
 
 			rePlayBtn
-			.on('pointerdown', () => {
-				console.log("down");
+			.on('pointerdown', onButtonDown)
+			.on('pointerup', onButtonUp);
+
+			function onButtonDown() {
 				rePlayBtn.clear();
 	
 				reDraw(rePlayBtn, colorPick[3], colorPick[2]);
-			})
-			.on('pointerup', () => {
-				console.log("up");
+			}
+	
+			function onButtonUp() {
 				rePlayBtn.clear();
 				
 				reDraw(rePlayBtn, colorPick[1], colorPick[0]);
 				
 				// 시작 페이지로 넘어가기
-				this.APP.stage.removeChild(rePlayContainer);
+				that.APP.stage.removeChild(rePlayContainer);
 
-				new S(this.APP, true);
-			});
-	
-			
-
-			// function onButtonDown() {
-			// }
-	
-			// function onButtonUp() {
-			// }
+				new S(that.APP, true);
+			}
 		}
 	}
 }
