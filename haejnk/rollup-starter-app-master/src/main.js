@@ -1,38 +1,35 @@
-import * as PIXI from 'pixi.js';
+// import Game from './game';
+// import Start from './colorMatchGame/colorMatchGame-start'
 
-// import App from './pixi-app';
+// const game = new Game();
 
-// import App from './container';
-// import App from './transparentBackground';
-// import App from './Tinting';
-// import App from './cacheAsBitmap';
-// import App from './particleContainer';
-// import App from './blendModes';
-// import App from './simplePlane';
+// new Start(game.Application);
 
-// import App from './slots';
+import Start from './pixi-app';
 
-
-import Start from './colorMatchGame-start';
-// import Play from './colorMatchGame-play-ele';
-// import ReStart from './colorMatchGame-result';
-
-class Game 
+class Manager
 {
-  constructor () //n
+  constructor()
   {
-    const app = new PIXI.Application({ 
-			width: screen.width / 3, 
-			height: screen.height * 3 / 4, 
-			backgroundColor: 0x004b30,
-			antialias: true,
-      sharedTicker: false,
-		});
-		document.body.appendChild(app.view);
-
-    new Start(app, true);
+    this.init();
   }
-  
+
+  init()
+  {
+    this.last = new Start(() => { this.onStartStart(); }, () => { this.onStartEnd(); });
+
+  }
+
+  onStartStart()
+  {
+    console.log('start');
+
+  }
+
+  onStartEnd()
+  {
+    console.log('end');
+  }
 }
 
-new Game();
+new Manager();
