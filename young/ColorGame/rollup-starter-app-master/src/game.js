@@ -174,20 +174,22 @@ export default class {
             const symbol = new PIXI.Sprite(slotTextures[num]);
             rc.addChild(symbol); 
 
-            //캐릭터 배열에 
+            //캐릭터 배열 0번에 추가
             reels.unshift({parent: reelContainer, symbol : num , container:rc});
         }
 
         function gameResult() {
+            //점수판으로 제작할 객체생성
             const resultContainer = new PIXI.Container();
             const resultText = new PIXI.Text("최종 스코어 : " + score + " 점");
             const resultBox = new PIXI.Graphics();
+
+            //점수판 속성 설정
             resultBox.beginFill(0xffffff);
             resultBox.drawRect(0, 0, 400, 200);
             resultBox.endFill();
-            
 
-            
+            //점수판에 출력될 텍스트 속성 설정
             resultText.x = resultBox.width/2;
             resultText.y = resultBox.height/2;
             resultText.pivot.x = resultText.x/2;
@@ -206,14 +208,15 @@ export default class {
         }
 
         setInterval(function() {
+            //this.time 으로 하면, timer.text에 들어가지 않음. 
             time--;
-            timer.text = Math.floor(time);
+            timer.text = time;
             // 초가 줄어들 수록 시간막대의 길이를 줄이고 싶은데, width 값을 변경 할때 마다 막대가 왼쪽으로 움직임.
             // 중요한 건, width는 변경되지 않음.
             graphics.width = time;
         },1000);
 
-        app.ticker.add((delta) => {
+        app.ticker.add(() => {
             if(time < 58){
                 app.ticker.stop();
                 gameResult();
