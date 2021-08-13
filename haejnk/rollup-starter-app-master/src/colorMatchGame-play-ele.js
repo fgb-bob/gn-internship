@@ -10,7 +10,6 @@ export default class _
 		this.score = 0;
 		let _score = 0;
 		// ticker 안에서 방어를 취할 변수 설정
-		this.STATE = false;
 		this.COUNT = 0;
 
 		if(!NEXT) {
@@ -217,16 +216,10 @@ export default class _
 					// 문제의 코드 부분...
 					if(this.time <= 0 && this.COUNT < 1) {
 						this.time = 0;
-						this.STATE = true;
 						this.COUNT++;
-						// 결과 페이지를 생성하는 코드는 if 문으로 막지 않으면
-						// ticker 의 특성에 의해 반복적으로 생성되어 
-						// 계속해서 생성되고, 에러가 뜨지 않는 버그?가 발생하게 되는 것 같다..
-						if(this.STATE) {
-							that.getClear().removeChild(playContainer);
-							new R(APP, true, this.score);
-							this.STATE = false;
-						}
+						// COUNT 변수 하나로도 제어 가능한 것 같다..
+						that.getClear().removeChild(playContainer);
+						new R(APP, true, this.score);
 					}
 					// 타이머의 텍스트와 게이지를 지우고 새로 다시 그리는 코드
 					timerText.destroy();
