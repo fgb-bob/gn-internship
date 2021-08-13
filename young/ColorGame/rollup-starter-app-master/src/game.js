@@ -56,7 +56,6 @@ export default class {
             PIXI.Texture.from('images/skully.png'),
         ];
 
-        
         //게임 화면 맨 처음에 랜덤한 캐릭터를 reels배열에 넣고, 화면에 출력
         const reels = []; //reel의 객체를 넣을 배열
         function onAssetsLoaded(){
