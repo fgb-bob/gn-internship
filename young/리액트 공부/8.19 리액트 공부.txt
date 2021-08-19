@@ -1,0 +1,263 @@
+리액트 공부(8.19)
+ 23.  Immer 를 사용한 더 쉬운 불변성 관리
+    * Immer와 함수형 업데이트 
+        * Ex) const onClick = useCallback(() => {
+                * setTodo(todo => ({
+                    * …todo,
+                    * Done : !todo.done
+                * }));
+            * },[]);
+            * -> setTodo 함수에 업데이트를 해주는 함수를 넣음으로써, 만약 useCallback을 사용하는 경우 두번째 파라미터인 deps 배열에 todo를 넣지 않아도 됨.
+        * 만약에 produce함수에 두개의 파라미터를 넣게 된다면, 첫번째 파라미터에 넣은 상태를 불변성을 유지하면서 새로운 상태를 만들어주지만, 만약에 첫번째 파라미터를 생략하고 바로 업데이트 함수를 넣어주게 된다면, 반환 값은 새로운 상태가 아닌 상태를 업데이트 해주는 함수가 됩니다.
+        * Ex) 
+            * Const [todo, setTodo] = useState({
+                * Text : ‘Hello’,
+                * Done:false
+            * });
+            * Const onClick = useCallback(() => {
+                * setTodo(
+                    * Produce(draft => {
+                        * Draft.done = !draft.done;
+                    * })
+                * );
+            * },[]);
+    * Immer는 javascripts 엔진의 proxy 라는 기능을 사용하는데, 구형 브라우저 및 react-native같은 환경에서는 지원하지 않으므로 es5 fallback을 사용하게 되는데 꽤나 느려지게 됨.
+    * 무조건 사용하진말고, 가능하면 데이터의 구조가 복잡해지게 되는 것을 방지. 
+    * 어쩔 수 없을때 immer을 사용하는 것이 좋다. 
+24. 클래스형 컴포넌트
+    * 이제는 잘 사용하지 않지만,
+    * 함수형 컴포넌트 + Hooks로 못하는 작업 2개정도 있고, react-native 관련 라우터 라이브러리인 react-native-navigation의 경우에도 사용하는 일이 종종있다.
+    * 클래스형 컴포넌트 만드는 법
+        * Ex)
+            * Class Hello extends Component{
+                * render(){
+                    * Const{color, name,isSpecial} = this.props;
+                    * Return (
+                        * <div style={{color}}>
+                            * {isSpecial && <b>*</b>}
+                            * 안녕하세요 {name}
+                        * </div>
+                    * );
+                * }
+            * }
+        * -> 클래스형 컴포넌트에서는 render() 메서드가 꼭 있어야 합니다.
+        * 이 메서드에서 렌더링 하고 싶은 JSX를 반환하시면 됩니다. 
+        * 그리고, props를 조회 해야 할 때에는 this.props를 조회하시면 됩니다.
+        * defaultProps를 설정하는 것은 이전 함수형 컴포넌트에서 했을 때와 똑같이 해줘도 되고, 클래스 내부에 static 키워드와 함께 선언 할 수도 있습니다.
+        * Ex)
+            * Static defaultProps = {
+                * name: ‘이름없음’
+            * };
+        * 일반적으로는 클래스 안에 커스텀 메서드를 선언합니다.
+        * Ex)
+            * Class Counter extends Component {
+                * handleIncrease() {
+                * }
+                * handleDecrease(){
+                * }
+        * -> 클래스 내부에 종속된 함수를 “메서드”라고 부릅니다.
+        * 클래스에서 커스텀 메서드를 만들게 될 때에는 보통 이름을 handle…이라고 짓습니다.
+        * 추후 상태를 업데이트 할 때에는 이 메서드에서 this.setState 라는 함수를 사용해야 하는데, 여기서 this는 컴포넌트 인스턴스를 가르켜야 하는데, 현재 구현한 handleIncrease 와 handleDecrease에서는 this를 조회하려고 하면 컴포넌트 인스턴스를 가르키지 않게 됩니다. (Undefined)
+        * -> 이렇게 되는 이유는, 우리가 만든 메서드들을 각 button 들의 이벤트로 등록하게 되는 과정에서 각 메서드와 컴포넌트 인스턴스의 관계가 끊겨버리기 때문입니다.
+        * 이를 해결하기 위해서 할 수 있는 방법은 3가지
+        * 1. 클래스 생성자 메서드 constructor에서 bind 작업을 해주는 것
+        * Ex)
+            * Class Counter extends Component {
+                * constructor(props) {
+                    * super(props);
+                    * this.handleIncrease = this.handleIncrease.bind(this);
+                    * this.handleDecrease = this.handleDecrease.bind(this);
+                * }
+            * -> 함수의 bind를 사용하면, 해당 함수에서 가르킬 this 를 직접 설정해 줄 수 있습니다.
+            * Constructor 에서는 props파라미터로 받아오고, super(props)를 호출해주어야 하는데, 이는 클래스가 컴포넌트로서 작동 할 수 있도록 해주는 Component 쪽에 구현되어있는 생성자 함수를 먼저 실행해주고, 우리가 할 작업을 하겠다는 것을 의미합니다.
+        * 2. 커스텀 메서드를 선언 할 때 화살표 함수 문법을 사용해서 작성
+        * Ex)
+            * handleIncrease = () => {
+                * console.log(this);
+            * }
+            * -> 클래스형 컴포넌트에서 화살표 함수를 사용해서 메서드를 구현하는 것은 클래스에 특정 속성을 선언 할 수 있게 해주는 class-properties라는 문법을 사용합니다. (아직 정식 자바스크립트 문법이 아님)
+        * 3. onClick 에서 새로운 함수를 만들어서 전달하는 방법
+        * Ex) 
+            * <button onClick={() => this.hadleIncrease()}+1</button>
+    * 상태 선언하기
+        * 클래스형 컴포넌트 상태를 관리 할 때에는 state라는 것을 사용합니다.
+        * state를 선언할 때에는 constructor 내부에서 this.state를 설정해주면됨.
+        * 클래스형 컴포넌트에서 state는 무조건 객체 형태여야 한다
+        * Ex) 
+            * constructor(props){
+                * super(props);
+                * this.state = {
+                    * Counter : 0
+                * };
+            * } 
+        * Render 메서드에서 state를 조회하려면 this.state를 조회하면된다
+        * 화살표함수 문법이 적용되어 있다면 굳이 constructor를 작성하지 않고도 static을 설정해줄수 있다.
+        * Ex)
+            * state= {
+                * Counter : 0
+            * };
+            * render(
+                * <h1>{this.state.counter}</h1>
+            * );
+    * 상태 업데이트하기
+        * 상태를 업데이트해야 할 때에는 this.setState 함수를 사용하면 됩니다.
+        * Ex) 
+            * handleIncrease = () => {
+                * this.setState({
+                    * Counter : this.state.counter + 1
+                * });
+            * };
+    * setState의 함수형 업데이트
+        * Ex) 
+            * handleIncrease = () => {
+                * this.setState(state => ({
+                    * Counter : state.counter + 1
+                * }));
+            * };
+        * 상태가 업데이트 되고 나서 어떤 작업을 하고 싶다면, setState의 두번째 파라미터에 콜백함수를 넣어줄 수도 있습니다.
+        * Ex)
+            * handleIncrease = () => {
+                * this.setState(
+                    * {
+                        * Counter : this.state.counter + 1
+                    * },
+                    * () => {
+                        * console.log(this.state.counter);
+                    * }
+                * );
+            * );
+25. LifeCycle Method
+    * 생명주기 메서드는 컴포넌트가 브라우저상에 나타나고, 업데이트되고, 사라지게 될 때, 호출되는 메서드들입니다.
+    * Render 단계
+        * 순수하고 부작용이 없습니다. React에 의해 일시 중지, 중단 또는 재시작 될 수 있습니다.
+    * Pre-commit 단계
+        * DOM을 읽을 수 있습니다.
+    * Commit 단계
+        * DOM을 사용하여 부작용을 실행하고 업데이트를 예약할 수 있습니다.
+    * 마운트
+        * 마운트 될 때 발생하는 생명주기
+            * Constructor
+            * getDerivedStateFromProps
+            * Render
+            * componentDidMount
+        * Constructor
+            * 컴포넌트의 생성자 메서드입니다.
+        * getDerivedStateFromProps
+            * props로 받아온 것을 state 에 넣어주고 싶을 때 사용합니다.
+            * Ex)
+                * Static getDerivedStateFromProps(nextProps, prevState) {
+                    * …
+                * }
+            * -> 다른 생명주기 메서드와는 달리 앞에 static을 필요로 하고, 이 안에서는 this를 조회 할 수 없습니다.
+            * 여기서 특정 객체를 반환하게 되면 해당 객체 안에 있는 내용들이 컴포넌트의 state로 설정이 됩니다.
+        * Render
+        * componentDidMount
+            * 컴포넌트의 첫번째 렌더링이 마치고 나면 호출되는 메서드
+            * 외부 라이브러리 연동을 하거나, 해당 컴포넌트에서 필요로 하는 데이터를 요청하기 위해 axios, fetch등을 통하여 ajax 요청을 하거나, DOM의 속성을 읽거나 직접 변경하는 작업을 합니다.
+    * 업데이트
+        * 컴포넌트가 업데이트 되는 시점에서의 호출되는 메서드
+            * getDerivedStateFromProps
+            * shouldComponentUpdate
+            * Render
+            * getSnapshotBeforeUpdate
+            * componentDidUpdate
+        * getDerivedStateFromProps
+            * 컴포넌트의 props나 state가 바뀌었을때도 이 메서드가 호출됩니다.
+        * shouldComponentUpdate
+            * 컴포넌트가 리렌더링 할지 말지 결정하는 메서드
+            * 최적화 할 때 사용하는 메서드, React.memo와 역할이 비슷
+        * Render
+        * getSnapshotBeforeUpdate
+            * 컴포넌트에 변화가 일어나기 직전의 DOM상태를 가져와서 특정 값을 반환하면 그 다음 발생하게 되는 componentDidUpdate 함수에서 받아와서 사용을 할 수 있습니다.
+        * componentDidUpdate
+            * 리렌더링이 마치고, 화면에 우리가 원하는 변화가 모두 반영되고 난 뒤 호출되는 메서드
+    * 언마운트
+        * 컴포넌트가 화면에서 사라지는 것을 의미한다.
+        * componentWillUnmount
+            * componentWillUnmount 는 컴포넌트가 화면에서 사라지기 직전에 호출됩니다.
+26. componentDidCatch 로 에러 잡아내기
+    * 리액트 컴포넌트에서 null을 렌더링하게 되면 아무것도 나타나지 않게 됩니다. 
+    * 이를 “null checking”이라고 부릅니다.
+    * 이렇게 데이터가 없으면 null을 보여주거나, 아니면 <div>로딩중</div>과 같은 결과물을 렌더링하면 됩니다.
+    * Ex) I(!users) return null;
+    * 에러를 방지하기 위해 defaultProps 를 설정해주는 방법도 있다.
+    * ComponentDidCatch 로 에러 잡아내기
+        * Ex) componentDidCatch(error, info){}
+        * -> 첫번째 파라미터는 에러의 내용, 두번째는 에러가 발생한 위치
+27. 리액트 개발 할 때 사용하면 편리한 도구들 - Prettier, ESLint, Snippet
+
+
+
+리액트 컴포넌트 스타일링하기
+
+1. Sass
+    * 복잡한 작업을 쉽게 할 수있게 해주고, 코드의 재활용성을 높여줄 뿐만 아니라, 코드의 가독성을 높여주어 유지보수를 쉽게 해준다.
+    * Sass 설치준비
+    * 1. Npx create-react-app styling-with-sass
+    * 2. Cd styling-with-sass
+    * 3. Yarn add node-sass //이 라이브러리는 sass를 css로 변환해주는 역할
+    * Css클래스 이름을 동적으로 넣어주고 싶으면 이렇게 설정
+        * className={[‘Button’,size].join(‘’)} 또는
+        * className={`Button ${size}`}
+    * classNames를 사용하면 다음과 같이 조건부 스타일링을 할 때 함수의 인자에 문자열, 배열, 객체 등을 전달하여 손쉽게 문자열을 조합할 수 있습니다.
+    * Ex) classNames(‘foo’, ;bar’); //=> ‘foo bar’
+    * classNames(‘foo’,{bar:true}); //=> ‘foo bar’
+    * classNames({foo:true},{bar:true});
+    * classNames(‘foo’,{bar:true, duck:false},’baz’,{quux:true}); //동시에 여러개의 타입으로 받아올 수도 있습니다.
+    * + false, null, 0, undefined 는 무시됩니다.
+    * scss파일에서 .Button{ &.large{{}} 가 의미하는 것은 .Button.large{}입니다.
+    * & + & {{}} 는 .button + .button입니다. -> 만약 함께 있다면 우측에 있는 버튼에 여백을 설정한다는 것
+    * @mixin button-color($color) {
+    * background : $color; 
+    * &:hover{
+        * bacgkorund: lighten($color, 10%);
+    * }
+    * &:active {
+        * Background: darken($color, 10%);
+    * }
+    * &.outline{
+        * Color:$color;
+        * Background:none;
+        * Border:1px solid $color;
+        * &:hover{
+            * Background:$color;
+            * Color:white;
+        * }
+    * } 
+    * }
+    * &.fullWidth {
+        * width:100%;
+        * Justify-content : center;
+        * &+& {
+            * Magin-left : 0;
+            * Margin-top : 1rem;
+        * }
+    * }
+    * & .blue{ @include button-color($blue); }
+    * <Button size=“large” color=“gray”>
+    * <button className={(classNames(‘Button’,size, color, {outline, fullWidth})} onClick={onClick} >
+    * …rest props 전달하기
+        * 이 컴포넌트에 onClick을 설정하고 싶을 때, 매번 설정하려면 번거로운데,
+        * …rest를 사용해서 우리가 지정한 props를 제외한 값들을 rest 라는 객체에 모아주고, <button> 태그에 해주면 rest 객체 안에 있는 값들을 태그에 설정해줍니다.
+2.  CSS Module
+    * 리액트 프로젝트에서 컴포넌트를 스타일링 할 때 CSS Module 이라는 기술을 사용하면, CSS 클래스가 중첩되는 것을 완벽히 방지할 수 있습니다.
+    * 파일 확장자를 .modules.css 로 한다 ex) .Box.module.css
+    * <div className={styles.Box}>{styles.Box}</div>
+    * 클래스 이름에 대하여 고유한 이름들이 만들어지기 때문에, 실수로 Css 클래스 이름이 다른 관계없는 곳에서 사용한 CSS 클래스 이름과 중복되는 일에 대하여 걱정 할 필요가 없습니다.
+3.  Styled-components
+    * JS 안에 CSS를 작성하는 것을 의미
+    * Yarn add styled-components
+    * Const Circles = styled.div`
+        * Width : 5rem;
+        * Height: 5rem;
+        * Background : ${props => props.color || ‘black’};
+        * Border-radius : 50%;
+        * ${props => props.huge && css` width:10rem; height:10rem;`}
+    * `
+    * Function App(){
+        * Return <Circle color=“blue” huge/>;
+    * }
+    * Polish 라는 라이브러리를 통해 lighten, darken함수 사용
+
+멋진 투두리스트 만들기
+	- mashup-todolist 실습폴더
