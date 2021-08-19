@@ -1,0 +1,449 @@
+0819
+
+25. LifeCycle Method
+
+- 개요
+  >> 한국어 : 생명주기 메서드.
+  >> 컴포넌트가 브라우저상에 나타나고, 업데이트 되고, 사라지게 될 때 + 컴포넌트에서 에러가 났을 때, 호출되는 메서드.
+  >> 클래스형 컴포넌트에서만 사용 가능.
+  >> useEffect 랑 은근히 비슷하다. (작동방식은 많이 다르다. 커버하지 않는 기능도 있음.)
+
+- 마운트 될 때 발생하는 생명주기
+  - constructor
+  - getDerivedStateFromProps
+  - render
+  - componentDidMount
+
+- constructor
+  >> 컴포넌트의 생성자 메서드. 컴포넌트가 만들어지면 가장 먼저 실행되는 메서드.
+    >> constructor(props) {
+        super(props);
+        console.log('constructor');
+     }
+
+- getDerivedStateFromProps
+  >> props 로 받아온 것을 state 에 넣어주고 싶을 때 사용.
+    >> static func_name(nextProps, prevState) {
+        ...
+        if(condition) {
+          return ...;
+        }
+        return null;
+      }
+    >> static 키워드를 필요로 한다.
+    >> 이 안에서는 this 를 조회할 수 없다.
+    >> 여기서 특정 객체를 반환하게 되면 해당 객체 안에 있는 내용들이 컴포넌트의 state로 설정. null 반환시 아무 일도 발생X.
+    >> 컴포넌트가 처음 렌더링 되기 전에도 호출되고, 리렌더링 되기 전에도 매번 실행됨.
+  
+- render
+  >> 컴포넌트를 렌더링하는 메서드
+
+- componentDidMount
+  >> 컴포넌트의 첫번째 렌더링을 마치고 나면 호출되는 메서드.
+  >> 이 메서드가 호출되는 시점에는 우리가 만든 컴포넌트가 화면에 나타난 상태이다.
+  >> DOM 을 사용해야하는 외부 라이브러리 연동을 하거나, 
+    해당 컴포넌트에서 필요로 하는 데이터를 요청하기 위해 ajax 요청을 하거나
+    DOM 의 속성을 읽거나 직접 변경하는 작업을 진행.
+  
+- 업데이트
+  - getDerivedStateFromProps
+  - shouldComponentUpdate
+  - render
+  - getSnapshotBeforeUpdate
+  - componentDidUpdate
+
+- getDerivedStateFromProps
+  >> 마운트 때 뿐만 아니라 업데이트 떄에도 호출. 
+    >> 컴포넌트의 props 나 state 가 바뀌었을 때도 이 메서드 호출.
+  
+- shouldComponentUpdate
+  >> 컴포넌트가 리렌더링 할지 말지를 결정하는 메서드
+  >> shouldComponentUpdate(nextProps, nextState) {
+      console.log('shouldComponentUpdate', nextProps, nextState);
+      return nextState.number % 10 !== 4;
+    }
+  >> 주로 최적화 할 때 사용하는 메서드. React.memo 와 비슷한 역할을 한다.
+
+- render
+
+- getSnapshotBeforeUpdate
+  >> 컴포넌트에 변화가 일어나기 직전의 DOM 상태를 가져와서 특정 값을 반환하고 
+    그 다음 발생하게 되는 componentDidUpdate 함수에서 받아와서 사용.
+    >> getSnapshotBeforeUpdate(prevProps, prevState) {
+        ...
+      }
+
+- componentDidUpdate
+  >> 리렌더링을 마치고, 화면에 원하는 변화가 모두 반영되고 난 뒤 호출되는 메서드.
+  >> 세번쨰 파라미터로 getSnapshotBeforeUpdate 에서 반환한 값 조회 가능.
+    >> componentDidUpdate(prevProps, prevState, snapshot) {
+        ...
+      }
+
+- 참고
+  >> 함수형 컴포넌트 + Hooks 를 사용할 때, getSnapshotBeforeUpdate 를 대체할 수 있는 기능이 아직 없다.
+    >> DOM 에 변화가 반영되기 직전에 DOM 의 속성을 확인하고 싶을 때 이 생명주기 메서드를 사용하면 된다.
+
+- 언마운트
+  - componentWillUnmount
+
+- componentWillUnmount
+  >> 컴포넌트가 화면에서 사라지기 직전에 호출.
+    >> componentWillUnmount() {
+        ...
+      }
+  >> DOM 에 직접 등록했었던 이벤트를 제거.
+  >> 만약 setTimeout 을 걸은 것이 있다? clearTimeout 을 통하여 제거.
+  >> + 외부 라이브러리를 사용한 게 있고 해당 라이브러리에 dispose 기능이 있다면 여기서 호출하면 된다.
+
+26. componentDidCatch 로 에러 잡아내기 / Sentry 연동
+
+- componentDidCatch 생명주기 메서드
+  >> 새로운 프로젝트 생성
+  >> $ npx create-react-app error-catch
+  >> 개발 서버 시작
+  >> $ cd error-catch
+     $ yarn start
+     
+- 리액트 앱에서 에러가 발생하는 상황
+  >> props 를 제대로 설정하지 않은 경우.
+    >> if (!user) {
+        return null;
+      }
+    >> null checking 을 해 준다.
+  >> 컴포넌트 내부에서 사용할 배열을 제대로 받지 못한 경우.
+     >> null checking.
+  >> 컴포넌트에 이벤트 props 를 제대로 전달하지 않은 경우.
+     >> defaultProps 설정을 해 준다.
+  
+- componentDidCatch 로 에러 잡아내기
+  >> 첫번쨰 파라미터 : 에러의 내용.
+  >> 두번째 파라미터 : 에러가 발생한 위치.
+
+- Sentry 연동
+  >> 프로젝트 디렉터리 생성
+  >> 디렉터리에 @sentry/browser 설치
+  >> $ yarn add @sentry/browser
+  >> Sentry 페이지에 나온 대로 작업 해 주기.
+    >> Sentry.init() 을 사용할 때 넣는 dsn 값은 프로젝트 마다 다르다.
+  
+  >> 개발자가 발견하지 못한 오류를 사용자가 발견한 경우.
+    >> componentDidCatch 에서 error 와 info 값을 네트워크를 통하여 다른 곳으로 전달.
+
+- 프로덕션 환경에서 잘 작동하는지 확인하기
+  >> $yarn build
+    >> 프로덕션 환경에서 작 작동하는 지 확인.
+  >> $ npx serve ./build
+    >> 서버 실행.
+    >> serve : 웹 서버를 열어서 특정 디렉터리에 있는 파일을 제공해주는 도구.
+    
+- 정리
+  >> componentDidCatch 의 사용법
+  >> Sentry 와 연동하는 방법.
+
+27. 리액트 개발 할 때 사용하면 편리한 도구들 - Prettier, ESLint, Snippet
+
+- Prettier
+  >> 자동으로 코드의 스타일을 관리해주는 도구.
+  >> ex) 문자열을 쓸 때 ' 를 쓸지 " 를 쓸지, 세미콜론을 코드 뒤에 붙일지 말지, 들여쓰기 등등.
+  >> CLI 를 통해 명령어를 입력하여 사용 가능. 
+  >> 다양한 에디터와 연동해서 사용 가능.
+  >> 특징 : 코드의 스타일을 사용자 마음대로 쉽게 커스터마이징 할 수 있다.
+  >> 권장 방법 : 에디터와 연동해서 사용.
+    >> $ npx create-react-app useful-tools
+    >> 새 프로젝트 생성
+    >> 해당 디렉터리를 에디터로 열기
+    >> 루트 디렉터리에 .prettierrc 파일 생성
+      >> {
+          "trailingComma": "all",
+          "tabWidth": 2,
+          "semi": true,
+          "singleQuote": false
+        }
+    >> 파일 생성 후, 에디터에서 Prettier 익스텐션 설치
+    >> Ctrl + , 키를 눌러 환경 설정 열기
+    >> Format On Save 검색 후 체크. => 설정한 코딩 스타일에 따라 자동으로 코드 변형.
+
+- ESLint
+  >> 자바스크립트의 문법을 확인해주는 도구.
+  >> 설치. => 터미널에서만 보이던 경고가 에디터 상에서도 보이게 된다.
+  >> useEffect 같은 Hook 을 사용할 때 사용하면 굉장히 유용하다.
+  >> Ctrl + , 키를 눌러 환경 설정 열기.
+  >> Auto Fix on Save 를 검색 > 체크. > ESLint 가 자동으로 고칠 수 있는 것들은 저장을 할 떄 자동으로 고쳐준다.
+  
+- ESLint 까다로운 규칙 적용
+  - eslint-config-airbnb
+  - eslint-config-google
+  - eslint-config-standard
+  >> ESLint 에는 다양한 규칙이 존재.
+  
+  >> eslint-config-airbnb 적용 시도
+    >> 설치. > package.json 파일에서 eslintConfig 부분 변경
+    >> ESLint 추가 설정을 하는 경우 eslint-config-prettier 라는 것도 적용 필요. 
+      >> 적용해야 prettier 에서 관리하는 스타일이 ESLint 에서 비활성화 됨.
+      >> $ yarn add eslint-config-prettier 
+      >> package.json 수정.
+    >> 규칙 비활성화 
+      >> react/jsx-filename-extension > package.json 에서 rules 값을 0으로 설정해주면 된다.
+      >> no-unused-vars > 값 1로 설정 > 경고 수준으로만 간주 
+    
+- Snippet
+  >> 에디터마다 내장되어 있는 기능.
+  >> 한국어 : 코드 조각
+  >> 용도 : 자주 사용되는 코드에 대하여 단축어를 만들어서 코드를 빠르게 생성해내는 것.
+
+  >> 확장 프로그램보단 직접 만드는 방법도 있다.
+    >> 설정에서 언어 모드를 javascript 에서 javascript React 로 설정해주기.
+    >> 스니펫을 위한 샘플 코드 생성.
+    >> import React from 'react';
+      function Sample() {
+        return (
+          <div>
+            Hello React!
+          </div>
+        );
+      }
+      export default Sample;
+    >> Sample 키워드 > ${TM_FILENAME_BASE} 로 바꾸기. 
+    >> Hello React > ${1} 로 바꾸기 <= 나중에 코드를 생성했을 때 텍스트 커서가 맨 처음 위치할 곳.
+    >> import React from 'react';
+       function ${TM_FILENAME_BASE} () {
+        return (
+          <div>
+            ${1}
+          </div>
+        );
+      }
+      export default ${TM_FILENAME_BASE};
+    >> 전체 코드 복사 > Snippet Generator 웹 서비스에 좌측에 붙여넣기
+    >> Description : 설명
+    >> Tab Trigger : 단축어
+    >> 우측에 코드 생성됨 > 복사
+    >> VScode 에서 F1 키 또는 Ctrl + shift + p 누르고 configure snippet 검색
+    >> javascriptreact.json 을 선택시 snippet 을 위한 json 파일이 열림 > 복사한 내용 붙여넣기
+    >> Sample 파일을 열고 모든 내용을 지운 후 설정해뒀던 단축키를 누르면 크드가 자동으로 생성된다.
+
+01. Sass
+
+- Sass
+  >> (Syntactically Awesome Style Sheets : 문법적으로 짱 멋진 스타일시트)
+  >> CSS pre-processor, 복잡한 작업을 쉽게. 코드의 재활용성, 코드의 가독성을 높여줌.
+  >> 두가지 확장자 (.scss/.sass) <= 두 개의 문법이 서로 다름.
+    >> sass
+      >> $font-stack: Helvetica, sans-serif
+         $primary-color: #333
+         
+         body
+            font: 100% $font-stack
+            color: $primary-color
+    >> scss 
+      >> $font-stack: Helvetica, sans-serif;
+         $primary-color: #333;
+         
+         body {
+            font: 100% $font-stack;
+            color: $primary-color;
+        }
+
+- 시작하기
+  >> 리액트 프로젝트 생성
+  >> $ npx create-react-app styling-with-sass
+  >> 해당 프로젝트 디렉터리에 node-sass 라이브러리 설치
+  >> $ cd styling-with-sass
+     $ yarn add node-sass
+    >> 라이브러리 역할 : Sass 를 CSS 로 변환해줌.   
+  
+- Bottom 컴포넌트 만들기
+  >> Button 컴포넌트 생성
+  >> Sass 로 스타일링하기
+    >> scss > 기존 css 에서 사용하지 못하던 문법
+      >> $blue : #228be6; <= 변수 선언 가능.
+      >> lighten() / darken() <= 색상을 더 밝게, 어둡게 해주는 함수 사용 가능.
+      
+- 버튼 사이즈 조정하기
+  >> className 에 CS 클래스 이름 동적으로 넣는 방법 
+    >> 1. className={['Button', size].join(' ')}
+    >> 2. className={`Button ${size}`}
+    >> 3. classnames 라이브러리 사용 > 훨씬 편하다.
+      >> 조건부 스타일링을 할 때 함수의 인자에 문자열, 배열, 객체 등을 전달, 조합 가능.
+      >> classNames('foo', 'bar'); // => 'foo bar'
+         classNames({ foo: true }, { bar: true }); // => 'foo bar'
+         classNames('foo', { bar: true, duck: false }, 'baz', { quux: true }); // => 'foo bar baz quux'
+         // false, null, 0, undefined 는 무시된다.
+         classNames(null, false, 'bar', undefined, 0, 1, { baz: null }, ''); // => 'bar 1'
+  >> 프로젝트에 설치하기
+    >> $ yarn add classnames
+  >> Button.js 에 사용
+    >> import './Button.scss';
+    
+  >> .Button {
+      &.large {
+      
+      }
+    }
+  >> 위와 아래의 의미는 같다
+  >> .Button.large {
+  
+    }
+  
+  >> & + & 
+    >> .Button + .Button 을 의미한다.
+  
+- 버튼 색상 설정하기
+  >> &.blue {
+      background: $blue;
+      &:hover {
+        background: lighten($blue, 10%);
+      }
+      &:active {
+        background: darken($blue, 10%);
+      }
+    }
+  >> 위의 코드는 반복된다. 반복되는 코드는 Sass의 mixin 이라는 기능으로 재사용이 가능하다.
+  >> @mixin button-color($color) {
+      background: $color;
+      &:hover {
+        background: lighten($color, 10%);
+      }
+      &:active {
+        background: darken($color, 10%);
+      }
+    }
+  >> (사용)
+    >> &.blue {
+        @include button-color($blue);
+      }
+    
+- outline 옵션 만들기
+  >> function Button({ children, size, color, outline }) {
+      return (
+        <button className={classNames('Button', size, color, { outline })}>
+          {children}
+        </button>
+      );
+    }
+  >> outline 값을 props 로 받아와서 객체 안에 집어 넣은 다음 classNames()에 포함시킴.
+  >> 이렇게 하면 값이 true 일 때에만 button 에 outline CSS 클래스가 적용된다.
+  >> @mixin button-color($color) {
+      ...
+      &.outline {
+        color: $color;
+        background: none;
+        border: 1px solid $color;
+        &.hover {
+          background; $color;
+          color: white;
+        }
+      }
+    }
+  >> 사용
+    >> <Button color="blue" outline>
+     
+- 전체 너비 차지하는 옵션
+  >> function Button({ (생략), fullWidth }) {
+      return (
+        (생략) { outline, fullWidth })}
+      ...
+  >> &.fullWidth {
+      width: 100%;
+      jusdify-content: center;
+      & + & {
+        margin-left: 0;
+        margin-top: 1rem;
+      }
+    }
+  >> 사용
+    >> <Button size="large" fullWidth>
+  
+- ...rest props 전달하기
+  >> 필요한 이벤트가 있을 때마다 매번 작성하는 것은 조금 노가다다.
+  >> 이런 문제를 해결해 주는 문법 > spread 와 rest.
+  >> 주로 배열과 객체, 함수의 파라미터, 인자를 다룰 때 사용한다. > 컴포넌트에서도 사용 가능.
+  >> Button 컴포넌트 
+    >> function Button({ children, size, color, outline, fullWidth, ...rest }) {
+        return (
+          <Button className={classNames('Button', size, color, { outline, fullWidth })} {...rest} >
+            {children}
+          </Button>
+        );
+      }
+  >> rest 안에 있는 객체 안에 있는 값들을 모두 <Button> 태그에 설정을 해 준다.
+
+- 정리
+  >> Sass 를 활용하는 방법.
+
+02. CSS Module
+
+- CSS Module ?
+  >> 컴포넌트를 스타일링 할 때 이 기술을 사용하면, CSS 클래스가 중첩되는 것을 완벽히 방지 가능.
+
+  >> CRA 로 만든 프로젝트에서 CSS Module 을 사용할 때, CSS 파일의 확장자는 > .module.css 
+  >> 고유 CSS 클래스 이름이 만들어짐. > 파일 경로, 파일 이름, 클래스 이름, 해쉬값 등이 사용됨.
+  
+- 사용하면 유용한 경우
+  - 레거시 프로젝트에 리액트를 도입할 때(기존 프로젝트에 있던 CSS 클래스와 이름이 중복되어도 스타일이 꼬이지 않게 해준다.)
+  - CSS 클래스를 중복되지 않게 작성하기 위하여 CSS 클래스 네이밍 규칙을 만들기 귀찮을 때
+
+- CSS 클래스 네이밍 규칙 예시
+  - 컴포넌트의 이름은 다른 컴포넌트랑 중복되지 않게 한다.
+  - 컴포넌트의 최상단 CSS 클래스는 컴포넌트의 이름과 일치시킨다. (ex: .Button
+  - 컴포넌트 내부에서 보여지는 CSS 클래스는 CSS Selector 를 잘 활용한다. (ex: .MyForm .my-input
+
+- CSS Module 사용 튜토리얼
+  >> 새로운 프로젝트 생성
+  >> $ npx create-react-app styling-with-css-module
+    >> webpack 에서 사용하는 css-loader 에서 지원되는 기능.
+  >> function CheckBox({ children, checked, ...rest }) {
+      ...
+      <input type="checkbox" checked={checked} {...rest} />
+      ...
+  >> 여기서 ...rest 를 사용한 이유 : CheckBox 컴포넌트에세 전달하게 될 name, onChange 같은 값을 그대로 input 에게 넣어주기 위함.
+  
+  >> react-icons 라이브러리 설치
+  >> $ yarn add react-icons
+    >> 이 라이브러리를 사용하면 Font Awesome, Ionicons, Material Design Icons 등의 아이콘들을 컴포넌트 형태로 쉽게 사용 할 수 있다.
+    
+  >> CSS Module 을 사용할 때에는 styles.icon 이런 식으로 객체 안에 있는 값을 조회해야 한다.
+  >> 만약 클래스 이름에 - 가 들어가 있다면 styles['my-class'] 와 같이 사용해야 한다.
+  >> 만약 여러개라면?
+    >> ${styles.one} ${stylses.two}
+  >> 조건부 스타일링을 해야 한다면?
+    >> ${styles.one} ${condition ? styles.two : '' }
+
+- CSS Module 을 조금더 편하게 사용하는 방법
+  >> Sass 에 있는 classnames 라이브러리의 bind 기능을 사용한다.
+  >> $ yarn add classnames
+  >> import classNames from 'classnames/bind';
+    const cx = classNames.bind(styles);
+    ...
+      {cx('checkbox')}
+    ...
+      {cx('icon')}
+  >> classnames 의 bind 기능을 사용하면 CSS 클래스 이름을 지정해 줄 때 cx('클래스이름') 과 같은 형식으로 사용 가능.
+  >> cx('one', 'two') / cx('my-component', { condition: true }) / cx('my-component', ['another', 'classnames'])
+  
+- 기타 내용
+  >> CSS Module 은 Sass 에서도 사용 가능.
+    >> node-sass 설치 > 확장자 > .module.scss 
+    >> css module 을 사용하고 있는 파일에서 클래스 이름을 전역적 클래스 이름으로 사용하고 싶다면?
+      >> :global .my-global-name {
+          }
+    >> Sass 사용시
+      >> :global {
+          .my-global-name {
+          }
+        }
+    >> css module 을 사용하지 않는 곳에서 특정 클래스에서만 고유 이름으로 만들어서 사용하고 싶다면?
+      >> :local .make-this.local {
+          }
+    >> Sass 사용시
+      >> :local {
+          .make-this-local {
+          }
+        }
+
+- 정리
+  >> CSS Module 사용하는 방법
+  >> 레거시 프로젝트에 리액트를 도입하게 될때
+  >> 클래스 이름 짓는 규칙을 정하기 힘든 상황이거나 번거로울 때 사용하면 좋다.
+
