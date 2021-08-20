@@ -1,0 +1,168 @@
+리액트 공부(8.20)
+
+API 연동하기
+	비동기 처리 다루기
+	- 함수를 비동기형태로 전환하기 위해서는 setTimeout 이라는 함수를 사용.
+	- 비동기 함수가 끝난 다음에 어떤 작업을 처리하고 싶다면, 콜백함수를 파라미터로
+	전달해주면 된다.
+	- 콜백함수란, 함수타입의 값을 파라미터로 넘겨줘서, 파라미터로 받은 함수를 특정 작업이 끝나고 호출을 해주는 것을 의미한다.
+	비동기적으로 처리하는 작업
+	1. Ajax Web API 요청 : 서버쪽에서 데이터를 받아야할 때는, 요청을 하고 서버에
+	서 응답을 할 때까지 대기를 해야 되기 때문에 작업을 비동기적으로 처리합니다.
+	2. 파일 읽기 : 주로 서버쪽에서 파일을 읽어야하는 상황에는 비동기적으로 처리합니다.
+	3. 암호화/복호화 
+	4. 작업 예약
+
+	Promise 만들기
+	- const myPromise = new Promise((resolve, reject) => {
+		// 구현…
+	})
+	- resolve를 호출 할 때 특정 값을 파라미터로 넣어주면, 이 값을 작업이 끝나고 
+	나서 사용할 수 있습니다. 작업이 끝나고 나서 또 다른 작업을 해야 할 때는 Promise 뒤에 
+	.then(…) 을 붙여서 사용하면 됩니다. 
+	
+	async/await 을 사용하면, promise의 문제점을 깔끔하게 해결할 수 있습니다.
+	async/await 문법을 사용할 때에는, 함수를 선언 할 때 함수의 앞부분에 async
+	키워드를 붙여주세요.
+	그리고 Promise의 앞부분에 await을 넣어주면 해당 프로미스가 끝날때까지 
+	기다렸다가 다음 작업을 수행할 수 있습니다.
+
+1. API 연동의 기본
+    * API를 호출하기 위해서는 axios라는 라이브러리를 설치
+        * Yarn add axios
+    * Axios 를 사용해서 get, put,post,delete 등의 메서드로 API 요청을 할 수 있다
+    * Get : 데이터 조회
+    * POST : 데이터 등록
+    * PUT : 데이터 수정
+    * DELETE : 데이터 제거
+    * axios의 사용법
+        * Ex) import axios from ‘axios’;
+        * axios.get(‘/users/1/‘); //파라미터에는 API의 주소를 넣는다
+    * Axios.post()로 데이터 등록
+        * Ex) axios.post(‘/users’,{
+                * Username : ‘blabla’,
+                * Name : ‘blabla’
+            * });
+    * useState와 useEffect로 데이터 로딩하기
+        * useState를 사용하여 요청상태를 관리하고, useEffect를 사용하여 컴포넌트가 렌더링 되는 시점에 요청을 시작하는 작업
+        * 요청에 대한 상태를 관리 할 때에는 총 3가지 상태를 관리해주어야한다
+            * 1. 요청의 결과
+            * 2. 로딩 상태
+            * 3. 에러
+        * useEffect에 첫번째 파라미터로 등록하는 함수에는 async를 사용할 수 없기 때문에 함수 내부에서 async를 사용하는 새로운 함수를 선언해주어야 합니다.
+2. useReducer로 요청 상태 관리하기
+    * useReducer로 구현했을 때의 장점은 useState의 setState 함수를 여러번 사용하지 않아도 된다는 점, 리듀서로 로직을 분리했으니 다른곳에서도 쉽게 재사용을 할 수 있다는 점
+3. useAsync 커스텀 Hook 만들어서 사용하기
+    * Function useAsync(callback,  deps=[]){
+    * … }
+    * 첫번째 파라미터는 API 요청을 시작하는 함수이고, 두번째 파라미터는 deps인데,
+    * 해당 함수 안에서 사용하는 useEffect의 deps로 설정됩니다.
+    * 이 값은 나중에 우리가 사용할 비동기 함수에서 파라미터가 필요하고,  그 파라미터가 바뀔 때 새로운 데이터를 불러오고 싶은 경우에 활용 할 수있습니다.
+    * 컴포넌트가 가장 처음 렌더링 할 떄만 API를 호출하고 싶다는 의미
+    * 데이터 나중에 불러오기
+        * 특정 버튼을 눌렀을 때만 API를 요청하고 싶을 때
+        * useAsync 파라미터 3번째 값에 skip을 넣어 버튼이 클릭됐을 때만 호출되게 제작
+    * API에 파라미터가 필요한 경우
+    * User.js
+    * Function User({id}){
+        * Const [state] = useAsync(() => getUser(id), [id]);
+        * -> useAsync를 사용 할 때, 파라미터를 포함시켜서 함수를 호출하는 새로운 함수를 만들어서 등록, id가 바뀔 때마다 재호출되도록 reps 에 id를 넣어줌
+4. React-async로 요청 상태 관리하기
+    * 지난 섹션에서 만들었던, useAsync와 비슷한 함수가 들어있는 라이브러리
+    * React-async의 useAsync를 사용할 때 파라미터로 넣는 옵션 객체에는 호출 할 함수 promiseFn을 넣고, 파라미터도 필드 이름과 함께 넣어주어야 합니다.
+    * useAsync를 사용 할 때 watch 값에 특정 값을 넣어주면 이 값이 바뀔 때마다 promiseFn 에 넣은 함수를 다시 호출해줍니다.
+    * Ex) const {data : use, error, isLoading } = useAsync({
+            * promiseFn : getUser,
+            * Id,
+            * Watch : id
+        * });
+    * Reload 함수를 사용하면, 데이터를 다시 불러올 수 있습니다.
+    * 렌더링하는 시점이 아닌 사용자의 특정 인터랙션에 따라 API를 호출하고 싶을 땐 promiseFn 대신 deferFn 을 사용하고, reload 대신 run 함수를 사용하면 됩니다.
+5. Context와 함께 사용하기
+    * 예 ) 현재 로그인된 사용자의 정보, 설정 등에 Context를 사용하면 개발이 편해집니다.
+    * Context 준비하기
+        * Api-integrate 실습폴더 참조
+
+리액트 라우터
+	react-router를 통한 리액트 싱글 페이지 애플리케이션 만들기
+	SPA란?
+	 = 페이지가 1개인 어플리케이션이라는 뜻
+	캐싱과 압축을 하여 웹 서비스 제공하는 것, 렌더링하는 것을 서버쪽에서 담당한다는 것은, 
+	그 만큼 렌더링을 위한 서버 자원이 사용되는 것이고, 불필요한 트래픽도 낭비됩니다.
+	react-router는 클라이언트 사이드에서 이뤄지는 라우팅을 간단하게 해줍니다.
+	서버 사이드 렌더링도 도와주는 도구들이 함꼐 딸려옵니다.
+	그래서 우리는 리액트 같은 라이브러리 혹은 프레임워크를 사용해서 뷰 렌더링을 유저의
+	브라우저가 담당하도록하고, 우선 어플리케이션을 브라우저에 로드 한 다음에 정말 
+	필요한 데이터만 전달받아 보여준다.
+
+1.  프로젝트 준비 및 기본적인 사용법
+    * Yarn add react-router-dom
+    * 라우터 적용은 index.js에서 BrowserRouter라는 컴포넌트를 사용하여 구현
+    * Ex)
+    * ReactDOM.render(
+        * <BrowserRouter>
+            * <App />
+        * </BrowserRouter>,
+        * document.getElementById(‘root’)
+    * );
+    * Route: 특정 주소에 컴포넌트 연결하기
+    * 사용자가 요청하는 주소에 따라 다른 컴포넌트를 보여주기 위한 작업을 할 때에는 
+    * Route 라는 컴포넌트를 사용합니다.
+    * Ex) <Route path=“주소규칙” component={보여주고싶은 컴포넌트}>
+        * <Route path=“/“ component={Home}/>
+    * /about 경로로 이동하기 위해서는 라우트에 exact라는 props를 true로 설정하면 됩니다.
+        * <Route path=“/“ exact={true} component={Home}/>
+        * <Route path=“/about” component={About}/>
+        * -> 이렇게 하면 경로가 완벽히 똑같을때만 컴포넌트를 보여주게 됩니다.
+    * Link: 누르면 다른 주소로 이동시키기
+        * Link 컴포넌트는 클릭하면 다른 주소로 이동시키는 컴포넌트 입니다. 
+        * 리액트 라우터를 사용할 땐 일반 <a href>태그를 사용하면 안됩니다.
+        * 만약에 한다면, onClick에 e.preventDefault()를 호출하고 따로 자바스크립트로 주소를 변환시켜주어야 합니다.
+        * a태그 페이지를 이동시키면서, 페이지를 아예 새로 불러오게 됩니다. 그렇게 되면서 리액트 앱이 지니고 있는 상태들도 초기화되고, 렌더링된 컴포넌트도 모두 사라지고 새로 렌더링을 하게 됩니다.
+        * 그렇기 때문에 a 태그 대신 Link 컴포넌트를 사용합니다.
+2. 파라미터와 쿼리
+    * 페이지 주소를 정의 할 때, 우리는 유동적인 값을 전달해야 할 때도 있습니다.
+    * 이는 파라미터와 쿼리로 나뉘어집니다.
+        * 파라미터 : /profiles/velopert
+        * 쿼리 : /about?details=true
+        * 일반적으로 파라미터는 특정 id 나 이름을 가지고 조회할 때 사용하고,
+        * 쿼리의 경우엔 어떤 키워드를 검색하거나, 요청을 할 때 필요한 옵션을 전달할 때 사용됩니다.
+    * URL Params
+        * /profile/velopert 이런식으로 뒷부분에 username을 넣어줄 때 해당 값을 파라미터로 받아와 보겠습니다.
+    * Query
+        * 쿼리는 라우트 컴포넌트에게 props 전달되는 location 객체에 있는 search값에서 읽어올 수 있습니다. Location 객체는 현재 앱이 갖고 있는 주소에 대한 정보를 지니고 있습니다.
+        * Ex)
+        * {
+            *   key: 'ac3df4', // not with HashHistory!
+            *   pathname: '/somewhere'
+            *   search: '?some=search-string',
+            *   hash: '#howdy',
+            *   state: {
+            *     [userDefined]: true
+            *   }
+        * }
+        * -> 여기서 search값을 확인해야하는데, 이 값은 문자열 형태로 되어있습니다.
+        * 객체 형태로 변환하여 우리가 직접 해주어야 함. 이 작업은 라이브러리를 사용하여 쉽게 할 수있습니다.
+        * Yarn add qs
+        * Ex) 
+        * Const About = ({location}) => {
+            *  const query = qs.parse(location.search, {
+                * ignoreQueryPrefix : true
+            * });
+            * Const detail = query.detail === ’true’;
+        * Return(
+            * <div>
+                * <h1>소개</h1>
+                * {detail && <p>추가적인 정보가 어쩌고 저쩌고…</p>}
+            * </div>
+        * );
+        * 이렇게 작성하면,
+        * http://localhost:3000/about?detail=true 이 주소를 통해서 추가적인정보를 확인 할 수 있다.
+3. 서브라우트
+    * 서브라우트는 라우트 내부의 라우트를 만드는 것을 의미합니다.
+    * 서브 라우트 만들어보기
+        * Route 컴포넌트에서는 component대신에 render가 사용되었는데, 여기서는 컴포넌트가 아니라, JSX 자체를 렌더링 할 수 있습니다.
+        * Ex) <Route path=“profiles” exact render={()=><div>유저를 선택해주세요.</div>}
+    * 서비스에서 특정 라우트 내에 탭 같은것을 만들게 된다면, 단순히 state로 관리하는 것 보다 서브 라우트로 관리를 하는 것을 권장.
+    * 그 이유는 setState 같은 것을 할 필요도 없고, 링크를 통하여 다른 곳에서 쉽게 진입 시킬 수도 있고, 나중에 검색엔진 크롤링 까지 고려한다면, 검색엔진 봇이 더욱 다양한 데이터를 수집해 갈 수 있기 때문입니다.
+    * Ex) <Route path=“/profiles/:username” component={Profile}/>
