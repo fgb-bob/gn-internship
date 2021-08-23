@@ -1,0 +1,210 @@
+리액트 공부(8.23)
+
+	4.	리액트 라우터 부가기능 
+	•	History 객체
+	•	라우트로 사용된 컴포넌트에게 match, location과 함께 전달되는 props 중 하나.
+	•	이 객체를 통하여 우리가 컴포넌트 내에 구현하는 메소드에서 라우터에 직접 접근 할 수 있습니다. - 뒤로가기, 특정 경로로 이동, 이탈 방지 등..
+	•	Const goBack = () => {
+	•	history.goBack();
+	•	};
+	•	Const goHome = () => {
+	•	History.push(‘/‘);
+	•	};
+	•	useEffect(() => {
+	•	console.log(history);
+	•	Const unblock = history.block(‘정말 떠나실건가요?’);
+	•	Return () => {
+	•	unblock();
+	•	};
+	•	}, [history]);
+	•	-> 이렇게 history 객체를 사용하면 조건부로 다른 곳으로 이동도 가능하고, 이탈을 메시지박스를 통하여 막을 수도 있습니다.
+	•	withRouter HoC 
+	•	withRouterHoC는 라우트 컴포넌트가 아닌 곳에서 match/location/history를 사용해야 할 떄 쓰면 됩니다.
+	•	Ex) <textarea value={JSON.stringify(location, null,2)} readOnly/>
+	•	<textarea value={JSON.stringify(match, null, 2)} readOnly />
+	•	Switch
+	•	switch는 여러 Router 들을 감싸서 그 중 규칙이 일치하는 라우트 단 하나만을 렌더링시켜줍니다. switch를 사용하면, 아무것도 일치하지 않았을 때 보여줄 Not Found페이지를 구현 할 수도 있습니다.
+	•	<Switch> … <Route>..</>
+	•	<Route
+	•	//path를 따로 정의하지 않으면 모든 상황에 렌더링됨
+	•	render={({location}) => (
+	•	<div>
+	•	<h2> 이 페이지는 존재하지 않습니다. : </h2>
+	•	<p>{location.pathname}</p>
+	•	</div>
+	•	)}
+	•	/>
+	•	</switch>
+	•	NavLink
+	•	만약 현재 경로와 Link에서 사용하는 경로가 일치하는 경우 특정 스타일 혹은 클래스를 적용할 수 있는 컴포넌트 입니다.
+	•	Ex) <NavLink to=“/profiles/gildong” activeStyle={{background:’black’, color:’white’}}>
+	5.	useReactRouter Hook 사용하기
+	•	withRouter를 사용하는 대신에 Hook을 사용해서 match, history, location을 조회하는 방법
+	•	Use-react-router 라이브러리를 이용 ex) yarn add use-react-router
+	•	RouterHookSample.js
+	•	Function RouterHookSample() {
+	•	Const { history, location, match } = useReactRouter;
+	•	console.log({history, location, match});
+	•	Return null;
+	•	}
+	6.	리덕스
+	•	리덕스는 리액트 생태계에서 가장 사용률이 높은 상태관리 라이브러리
+	•	리덕스를 사용하면 만들게 될 컴포넌트들의 상태 관련 로직들을 다른 파일들로 분리시켜서 더욱 효율적으로 관리할 수 있으며, 글로벌 상태관리도 손쉽게 할 수 있습니다.
+	•	리덕스를 사용하는 것과 Context API를 사용하는 것의 차이
+	•	1. 리덕스에는 미들웨어라는 개념이 존재합니다.
+	•	리덕스로 상태관리를 할 때에는 우리가 useReducer를 사용해볼때 접했던 개념인 리듀서 함수를 사용합니다. 리덕스의 미들웨어를 사용하면 액션 객체가 리듀서에서 처리되기 전에 우리가 원하는 작업들을 수행 할 수있습니다.
+	•	Ex)
+	•	특정 조건에 따라 액션이 무시되게 만들수 있습니다.
+	•	액션을 콘솔에 출력하거나, 서버쪽에 로깅을 할 수 있습니다.
+	•	액션이 디스패치 됐을 때 이를 수정해서 리듀서에게 전달되도록 할 수있습니다.
+	•	특정 액션이 발생했을 때 이에 기반하여 다른 액션이 발생되도록  할 수있습니다.
+	•	특정 액션이 발생했을 때 특정 자바스크립트 함수를 실행시킬 수 있습니다.
+	•	미들웨어는 주로 비동기 작업을 처리 할 때 많이 사용됩니다.
+	•	2. 유용한 함수와, Hooks
+	•	Connect 함수를 사용하면 리덕스의 상태 또는 액션 생성 함수를 컴포넌트의 props로 받아올수있으며, useSelector, useDispatch, useStore과 같은 Hooks를 사용하면 손쉽게 상태를 조회하거나 액션을 디스패치 할 수도있다.
+	•	Connect 함수와 useSelector 함수에는 내부적으로 최적화가 잘 이루어져있어서 실제 상태가 바뀔때만 리렌더링됩니다. 반면에, Context API를 사용할 때에는 그러한 최적화가 자동으로 이루어져있지 않기때문에 Context가 지니고 있는 상태가 바뀌면 해당 Context의 Provider내부 컴포넌트들이 모두 리렌더링 된다.
+	•	3. 하나의 커다란 상태
+	•	Context API를 사용해서 글로벌 상태를 관리 할 때에는 일반적으로 기능별로 Context를 만들어서 사용하는 것이 일반적입니다. 반면 리덕스에서는 모든 글로벌 상태를 하나의 커다란 상태 객체에 넣어서 사용하는 것이 필수. -> 때문에 매번 Context를 새로 만드는 수고로움을 덜 수 있습니다.
+	•	리덕스 언제 써야 할까?
+	•	1. 프로젝트의 규모가 큰가?
+	•	Yes : 리덕스
+	•	NO : Context API
+	•	2. 비동기작업을 자주 하게 되는가?
+	•	Yes : 리덕스
+	•	No : Context API
+	•	1. 리덕스에서 사용되는 키워드 숙지하기
+	•	액션(Action)
+	•	상태의 어떠한 변화가 필요하게 될 땐, 우리는 액션이라는 것을 발생 시킵니다. 이는, 하나의 객체로 표현되는데요, 액션 객체는 다음과 같은 형식으로 이뤄져있습니다.
+	•	{
+	•	Type: “TOGGLE_VALUE”
+	•	}
+	•	액션 객체는 type 필드를 필수적으로 가지고있어야한다.
+	•	액션 생성함수(Action Creator)
+	•	액션 생성함수는, 액션을 만드는 함수입니다. 단순히 파라미터를 받아와서 액션 객체 형태로 만들어줍니다.
+	•	Ex) 
+	•	Export function addTodo(data) {
+	•	Return{
+	•	Type : “ADD_TODO”,
+	•	Data
+	•	};
+	•	}
+	•	//화살표 함수로도 만들 수 있습니다.
+	•	Export const changeInput = text => ({
+	•	Type : “CHANGE_INPUT”,
+	•	Text
+	•	});
+	•	이러한 액션 생성함수를 만들어서 사용하는 이유는 나중에 컴포넌트에서 더욱 쉽게 액션을 발생시키기 위함입니다. 그래서 보통 함수 앞에 export키워드를 붙여서 다른 파일에서 불러와서 사용합니다.
+	•	리덕스를 사용할 때 액션 생성함수를 사용하는 것이 필수적이진 않습니다. 액션을 발생 시킬 때마다 직접 액션 객체를 작성할 수도있습니다.
+	•	리듀서(Reducer)
+	•	리듀서는 변화를 일으키는 함수입니다. 
+	•	Ex) function reducer(state, action) {
+	•	//상태 업데이트 로직
+	•	Return alteredState;
+	•	}
+	•	리듀서는, 현재의 상태와 전달 받은 액션을 참고하여 새로운 상태를 만들어서 반환합니다.
+	•	useReducer에선 일반적으로 default 부분에 에러를 발생시키도록 처리하는게 일반적인 반면, 리덕스의 리듀서에서는 기존 state를 그대로 반환하도록 작성해야합니다.
+	•	스토어 (Store)
+	•	리덕스에서는 한 애플리케이션당 하나의 스토어를 만들게 됩니다. 
+	•	스토어 안에는, 현재의 앱 상태와, 리듀서가 들어가있고, 추가적으로 몇가지 내장 함수들이 있습니다.
+	•	디스패치 (dispatch)
+	•	디스패치는 스토어의 내장함수 중 하나입니다. 디스패치는 액션을 발생 시키는 것이라고 이해하면 됩니다.
+	•	Dispatch 라는 함수에는 액션을 파라미터로 전달합니다.. dispatch(action) 이런식으로
+	•	구독 (subscribe) 
+	•	함수 형태의 값을 파라미터로 받아옵니다. 
+	•	Subscribe 함수에 특정 함수를 전달해주면, 액션이 디스패치 되었을 때 마다 전달해준 함수가 호출됩니다.
+	•	리액트에서 리덕스를 사용하게 될 때 보통 이 함수를 직접 사용하는 일은 별로 없다. 그 대신에 react-redux라는 라이브러리에서 제공하는 connect 함수또는 useSelector Hook을 사용하여 리덕스 스토어의 상태에 구독합니다. 
+	•	2. 리덕스의 3가지 규칙
+	•	1.  하나의 애플리케이션 안에는 하나의 스토어가 있습니다.
+	•	여러개의 스토어를 사용하는 것은 권장X 
+	•	특정 업데이트가 너무 빈번하게 일어나거나, 애플리케이션의 특정 부분을 완전히 분리시키게 될 떄 여러개의 스토어를 만들 수도 있다. -> 그렇게 하면, 개발 도구를 활용하지 못하게 된다.
+	•	2. 상태는 읽기 전용 입니다.
+	•	기존의 상태는 건들이지 않고 새로운 상태를 생성하여 업데이트 해주는 방식으로 해주면, 나중에 개발자 도구를 통해서 뒤로 돌릴수도 있고 다시 앞으로 돌릴 수도 있습니다.
+	•	리덕스에서 불변성을 유지해야 하는 이유는 내부적으로 데이터가 변경 되는 것을 감지하기 위하여 shallow equality 검사를 하기 때문
+	•	3. 변화를 일으키는 함수, 리듀서는 순수한 함수여야 합니다.
+	•	리듀서 함수는 이전 상태와 액션 객체를 파라미터로 받습니다.
+	•	이전의 상태는 절대로 건들이지 않고, 변화를 일으킨 새로운 상태 객체를 만들어서 반환합니다.
+	•	똑같은 파라미터로 호출된 리듀서 함수는 언제나 똑같은 결과값을 반환해야 합니다.
+	•	-> 동일한 인풋이라면 언제나 동일한 아웃풋이 있어야합니다.
+	•	그런데 일부 로직들 중에서는 실행 할 때마다 다른 결과값이 나타날 수도 있는데, 예) new Date(), 랜덤 숫자, 네트워크 요청 그러한 작업은 결코 순수하지 않은 작업이므로, 리듀서 함수의 바깥에서 처리해줘야합니다. 그런것을 하기 위해서, 리덕스 미들웨어를 사용한다. 
+	•	3. 리덕스 사용 할 준비하기
+	•	리덕스 스토어안의 상태는 액션이 디스패치됨에 따라 업데이트 됩니다.
+	•	1. ‘redux’에서 createStore import
+	•	2. 리덕스에서 관리 할 상태 정의하기 ex) const initialState = { … }
+	•	3. 액션타입 정의 ex) const INCREASE = ‘INCREASE’
+	•	4. 액션 생성함수 정의
+	•	ex) const decrease = () => ({type: DECREAE});
+	•	Ex) const addToList = item => ({ type : ADD_TO_LIST, item});
+	•	5. 리듀서 만들기
+	•	Function reducer(state = initialState, action){
+	•	switch(action.type){
+	•	Case INCREASE:
+	•	Return {
+	•	…state,
+	•	Counter : state.counter + 1
+	•	};
+	•	…
+	•	Case ADD_TO_LIST:
+	•	Return{
+	•	…state,
+	•	List : state.list.concat(action.item)
+	•	};
+	•	Default:
+	•	Return state;
+	•	}
+	•	}
+	•	6. 스토어 만들기
+	•	Const store = createStore(reducer);
+	•	//현재 store 안에 들어있는 상태를 조회합니다.
+	•	console.log(store.getState()); 
+	•	// 스토어 안에 들어있는 상태가 바뀔 때마다 호출되는 listener 함수
+	•	Const listener = () => {
+	•	Const state = store.getState();
+	•	console.log(state);
+	•	};
+	•	Const unsubscribe = store.subscribe(listener);
+	•	7. 액션 디스패치
+	•	store.dispatch(increase());
+	•	store.dispatch(addToList({id : 1, text: ‘와우’}));
+	•	리덕스 스토어 안의 액션이 디스패치됨에 따라 업데이트 됩니다.
+	•	4. 리덕스 모듈 만들기
+	•	리덕스 모듈이란 다음 항목들이 모두 들어있는 자바스크립트 파일을 의미
+	•	액션 타입
+	•	액션 생성함수
+	•	리듀서
+	•	+ 리듀서와 액션 관련 코드들을 하나의 파일에 몰아서 작성하는 것을 Ducks 패턴이라고 함.
+	•	Counter 모듈 만들기
+	•	Todo 모듈 만들기
+	•	루트 리듀서 만들기
+	•	한 프로젝트에 여러개의 리듀서가 있을 때는 이를 한 리듀서로 합쳐서 사용합니다. 합쳐진 리듀서를 우리는 루트 리듀서라고 부릅니다.
+	•	리듀서를 합치는 작업은 리덕스에 내장되어있는 combineReducers 라는 함수를 사용합니다.
+	•	1. combineReducers 함수로 rootReducer 생성 & 리듀서 합치기
+	•	Ex)
+	•	Const rootReducer = combineReducers({
+	•	Counter,
+	•	Todos
+	•	});
+	•	2. Index.js
+	•	Ex) const store = createStore(rootReducer); //스토어를 만듭니다.
+	•	console.log(store.getState());
+	•	리액트 프로젝트에 리덕스 적용하기
+	•	리액트 프로젝트에 리덕스를 적용할 때에는 react-redux 라는 라이브러리를 사용해야 합니다.
+	•	1. 라이브러리 설치 ex) yarn add react-redux
+	•	2. Index.js에서 Provider라는 컴포넌트를 불러와서 App 컴포넌트를 감싸주고 Provider의 props에 store를 넣어줍니다.
+	•	Ex) import {provider} from ‘react-redux’
+	•	<Provider store={store}>
+	•	<App/>
+	•	</>
+	•	-> Provider 로 store를 넣어서 App을 감싸게 되면 우리가 렌더링하는 그 어떤 컴포넌트던지 리덕스 스토어에 접근할 수있게 됩니다. 
+	•	5. 카운터 구현하기
+	•	프리젠테이셔널 컴포넌트 만들기
+	•	프로젠테이셔널 컴포넌트란, 리덕스 스토어에 직접적으로 접근하지 않고 필요한 값 또는 함수를 props로 받아와서 사용하는 컴포넌트입니다.
+	•	컨테이너 컴포넌트 만들기
+	•	컨테이너 컴포넌트란, 리덕스 스토어의 상태를 조회하거나, 액션을 디스패치 할 수 있는 컴포넌트를 의미합니다. 그리고, html 태그들을 사용하지 않고 다른 프리젠테이셔널 컴포넌트들을 불러와서 사용합니다.
+	•	Learn-redux 실습파일 참고
+	•	6. 리덕스 개발자도구 적용하기
+	•	리덕스 개발자 도구를 사용하면 현재 스토어의 상태를 개발자 도구에서 조회 할 수 있고 지금까지 어떤 액션들이 디스패치 되었는지, 그리고 액션에 따라 상태가 어떻게 변화했는지 확인 할 수 있습니다.
+	•	1. Redux devtools 다운로드
+	•	2. 프로젝트에 redux-devtools-extension 설치
+	•	3. Index.js 수정
+	•	Import { composeWithDevTools } from ‘redux-devtools-extension’
+	•	Const store = createStore(rootReducer, composeWithDevTools());
