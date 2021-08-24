@@ -1,0 +1,202 @@
+리액트 공부(8.24)
+
+7. 할 일 목록 구현하기
+    * 프레젠테이셔널 컴포넌트 구현하기
+        * 실습폴더 참고 :)
+8.  useSelector 최적화
+    * 기본적으로, useSelector를 사용해서 리덕스 스토어의 상태를 조회할 땐 만약 상태가 바뀌지 않았으면 리렌더링 하지 않습니다.
+    * useSelector는 리덕스 스토어의 상태를 조회하는 hooks입니다.
+    * TodosContainer 의 경우 카운터 값이 바뀔 때 todos 값엔 변화가 없으니까, 리렌더링이되지 않는 것.
+    * 반면 CounterContainer 는 
+    * const {number, diff} = useSelector(state => ({ number : state.counter.number, diff:state.counter.diff}));
+    * 를 만드는 것이기 때문에 상태가 바뀌었는지 바뀌지 않았는지 확인을 할 수 없어서 렌더링이 이루어지고 있는 것
+    * 이를 최적화 하기 위한 두가지 방법
+        * 1. useSelector를 여러번 사용하는 것
+            * Const number = useSelector(state => state.counter.number);
+            * Const diff = useSelector(state.counter.diff);
+            * -> 이렇게 하면 해당 값들 하나라도 바뀌었을 때에만 컴포넌트가 리렌더링됩니다.
+        * 2. React-redux의 shallowEqual 함수를 useSelector의 두번째 인자로 전달해주는 것입니다.
+            * Ex) 
+            * Function CounterContainer(){
+                * Const { number, diff } = useSelector(
+                    * State => ({
+                        * Number : state.counter.number,
+                        * Diff : state.counter.diff
+                    * }),
+                    * shallowEqual
+                * );
+                * -> useSelector의 두번째 파라미터는 equalityFn 인데요,
+                * equalityFn ?: (left : any, right: any) => boolean
+                * 이전 값과 다음 값을 비교하여 true가 나오면 리렌더링을 하지 않고, false가 나오면 리렌더링을 합니다.
+                * shallowEqual 은 react-redux에 내장되어있는 함수로서, 객체 안의 가장 겉에 있는 값들을 모두 비교해줍니다.
+                * 겉에 있는 값이란, 만약 다음과 같은 객체가 있다면
+                * Ex)
+                * Const object = { 
+                    * a: { x:3, y:2, z:1 }, 
+                    * b:1,
+                    * c:[{id:1}]
+                * }
+                * -> 가장 겉에 있는 값은 object.a, object.b, object.c 입니다.
+                * shallowEqual에서는 해당 값들만 비교하고 object.a.x 또는 object.c[0] 값은 비교하지 않습니다.
+                * -> 이렇게 둘 중 하나의 방식으로 최적화를 해주면, 컨테이너 컴포넌트가 필요한 상황에서만 리렌더링 될 것입니다.
+9. Connect 함수
+    * Connect 함수는 컨테이너 컴포넌트를 만드는 또 다른 방법입니다.
+    * useSelector, useDispatch가 워낙 편하기 때문에, 앞으로 사용할 일이 별로 없습니다.
+    * 클래스형 컴포넌트로 작성하게 될 경우,Hooks를 사용하지 못하기 때문에 connect 함수를 사용해야합니다.
+    * Connect는 HOC 입니다. HOC 란, Higher-Order Componenet를 의미.
+    * 이는 리액트 컴포넌트를 개발하는 하나의 패턴으로써, 컴포넌트의 로직을 재활용 할 때 유용한 패턴입니다.
+    * 예를 들어서, 특정 함수 또는 값을 props로 받아와서 사용하고 싶은 경우에 이러한 패턴을 패턴을 사용합니다.
+    * HOC의 용도는 “컴포넌트를 특정 함수로 감싸서 특정 값 또는 함수를 props로 받아와서 사용할 수있게 해주는 패턴”
+    * Connect 사용해보기
+        * Connect 함수는 리덕스 스토어안에 있는 상태를 props로 넣어줄 수도있고, 액션을 디스패치하는 함수를 props로 넣어줄 수도있습니다.
+        * Ex) const mapStateToProps = state = ({
+                * Number : state.counter.number,
+                * Diff : state.counter.diff
+            * });
+        * //mapStateToProps는 리덕스 스토어의 상태를 조회해서 어떤 것들을 props로 넣어줄지 정의합니다.
+        * Ex) const mapDispatchToProps = dispatch => ({
+                * onIncrease: () => dispatch(increase()),
+                * onDecrease: () => dispatch(decrease()),
+                * onSetDiff: diff => dispatch(setDiff(diff))
+            * });
+        * -> mapDispatchToProps는 액션을 디스패치하는 함수를 만들어서 props로 넣어줍니다.
+        * Connect 함수에는 mapStateToProps, mapDispatchToProps 를 인자로 넣어준다.
+        * Export default connect(
+            * mapStateToProps,
+            * mapDispatchToProps
+        * )(CounterContainer);
+        * -> mapDispatchToProps는 redux 라이브러리에 내장된 bindActionCreators 라는 함수를 사용하면 다음과 같이 리팩토링 할 수있습니다.
+        * Const mapDispatchToProps = dispatch => 
+            * //bindActionCreators를 사용하면, 자동으로 액션 생성 함수에 dispatch가 감싸진 상태로 호출 할 수 있습니다.
+            * Ex)
+            * bindActionCreators(
+                * {
+                    * Increase,
+                    * Decrease,
+                    * setDiff
+                * },
+                * Dispatch
+            * );
+    * Connect 함수 더 깔끔하게 작성하기
+        * mapStateToProps와 mapDispatchToProps를 따로 선언하지 않고, connect 함수를 사용 할 때 인자 쪽에서 익명함수로 바로 만들어서 사용하면 코드가 깔끔해짐
+        * TodoContainer.js
+        * useSelector와 useDispatch를 삭제하고
+        * Export default connect(
+            * State => ({ todos: state.todos}),
+            * {
+                * addTodo,
+                * toggleTodo
+            * }
+        * )(TodosContainer);
+    * Connect, 알아둬야 하는 것들
+        * 1. mapStateToProps 의 두번째 파라미터 ownProps
+            * mapStateToProps 에서 두번쨰 파라미터 ownProps를 받아올 수 있는데, 이 파라미터는 생략해도 된다.
+            * <CounterContainer myValue={1}/> 이라고 하면 {myValue:1} 값이 ownProps가 됩니다. 
+            * Const mapStateToProps = (state, ownProps) => ({
+                * Todo : state.todos[ownprops.id]
+            * })
+        * 2. Connect의 3번쨰 파라미터 mergeProps
+            * 이 파라미터는 컴포넌트가 실제로 전달받게 될 props를 정의
+            * (stateProps, dispatchProps, ownProps) => Object
+        * 3. Connect의 4번째 파라미터 options
+            * Connect 함수를 사용 할 때 이 컨테이너 컴포넌트가 어떻게 동작할지에 대한 옵션을 설정할 수 있다.
+7장 리덕스 미들웨어
+	ContextAPI 또는 MobX를 사용하는 것과 차별화가 되는 부분
+	 액션 -> 미들웨어 -> 리듀서 -> 스토어
+	리덕스 미들웨어를 사용하면 액션이 디스패치 된 다음, 리듀서에서 해당 액션을 받아와서 업데이트 하기 전에 추가적인 작업을 할 수 있습니다.
+        * 특정 조건에 따라 액션이 무시되게 만들 수있습니다.
+        * 액션을 콘솔에 출력하거나, 서버쪽에 로깅을 할 수있습니다.
+        * 액션이 디스패치 됐을 때 이를 수정해서 리듀서에게 전달되도록 할 수있습니다.
+        * 특정 액션이 발생했을 때 이에 기반하여 다른 액션이 발생되도록 할 수 잇습니다.
+        * 특정 액션이 발생했을 때 특정 자바스크립트 함수를 실행시킬 수 있습니다.
+보통 리덕스에서 미들웨어를 사용하는 주된 사용 용도는 비동기 작업을 처리 할 때입니다.
+예를 들어 리액트 앱에서 우리가 만약 백엔드 API를 연동해야 된다면, 리덕스 미들웨어를 사용하여 처리한다.
+Redux-thunk와 redux-saga 두 라이브러리가 가장 많이 사용됩니다.
+    1. 리덕스 프로젝트 준비하기
+        * Learn-redux-middleware 실습파일 확인 :)
+    2. 미들웨어 만들어보고 이해하기
+        * 리덕스 미들웨어를 만들 땐 다음 템플릿을 사용
+        * Const middleware = store => next => action => {
+            * // 하고 싶은 작업..
+        * }
+        * 미들웨어는 결국 하나의 함수이빈다. 함수를 연달아서 두번 리턴하는 함수.
+        * 이 함수를 function키워드를 사용하여 작성한다면,
+        * Function middleware(store){
+            * Return function(next) {
+                * Return function(action){
+                    * // 하고 싶은 작업…
+                * };
+            * };
+        * };
+        * 여기서 각 함수가 받아오는 파라미터의 의미
+        * 첫번째 store는 리덕스 스토어 인스턴스입니다. 이 안에 dispatch, getState, subscribe 내장함수가 있다.
+        * 두번째 next는 액션을 다음 미들웨어에게 전달하는 함수입니다. next(action) 이런 형태로 사용합니다. 만약 다음 미들웨어가 없다면 리듀서에게 액션을 전달해줍니다. 만약에 next를 호출하지 않게 된다면 액션이 무시처리되어 리듀서에게로 전달되지 않습니다.
+        * 세번째 action은 현재 처리하고 있는 액션 객체입니다.
+        * 리덕스 스토어에는 여러 개의 미들웨어를 등록할 수 있습니다.
+        * 새로운 액션이 디스패치되면 첫 번쨰로 등록한 미들웨어가 호출됩니다.
+        * 만약에 미들웨어에서 next(action)을 호출하게 되면 다음 미들웨어로 액션이 넘어갑니다. 그리고 만약 미들웨어에서 store.dispatch를 사용하면 다른 액션을 추가적으로 발생시킬 수도 있습니다.
+        * 미들웨어 적용하기
+            * 스토어에 미들웨어를 적용 할 때에는 applyMiddleware 라는 함수를 사용합니다.
+            * index.js
+            * Ex ) const store = createStore(rootReducer, applyMiddleware(myLogger));
+            * 미들웨어 안에서는 무엇이든지 할 수있습니다. 예를 들어서 액션 값을 객체가 아닌 함수도 받아오게 만들어서 액션이 함수타입이면 이를 실행시키게끔 할 수 도있습니다.
+            * Ex)
+            * Const thunk = store => next => action =>
+                * Typeof action === ‘function’
+                * ? action(store.dispatch, store.getState)
+                * : next(action)
+            * 그러면 나중에 dispatch 할 때 다음과 같이 할 수있다
+            * Const myThunk = () => (dispatch, getState) => {
+                * dispatch({type : ‘HELLO’});
+                * dispatch({type:’BYE’});
+            * }
+            * dispatch(myThunk());
+    3. Redux-logger 사용 및 미들웨어와 Devools 함께 사용하기
+        * Yarn add redux-logger 설치
+        * Redux DevTools 사용하기
+        * Yarn add redux-devtools-extension 설치
+        * index.js 수정
+        * Ex) const store = createStore(
+                * rootReducer,
+                * composeWithDevTools(applyMiddleware(logger))
+            * );
+    4. Redux-thunk
+        * Redux-thunk는 리덕스에서 비동기 작업을 처리 할 때 가장 많이 사용하는 미들웨어입니다. 이 미들웨어를 사용하면 액션객체가 아닌 함수를 디스패치 할 수 있습니다.
+        * Const thunk = store => next => action => 
+            * Typeof action === ‘function’
+            * ? action(store.dispatch, store.getState) : next(action)
+            * 함수를 디스패치 할 때에는, 해당 함수에서 dispatch와 getState를 파라미터로 받아와주어야 합니다. 이 함수를 만들어주는 함수를 우리는 thunk라고 부릅니다.
+        * thunk의 사용예시
+        * Const getComments = () => (dispatch, getState) => {
+            * //이 안에서는 액션을 dispatch 할 수도 있고
+            * //getState를 사용하여 현재 상태도 조회 할 수 있습니다.
+            * Const id = getState().post.activeId;
+            * //요청이 시작했음을 알리는 액션
+            * dispatch({type:’GET_COMMENTS’});
+            * //댓글을 조회하는 프로미스를 반환하는 getComments 가 있다고 가정
+            * Api
+                * .getComments(id) //요청을 하고
+                * .then(comments => dispatch({type:’GET_COMMENTS_SUCCESS’, id, comments })) //성공시
+                * .catch(e => dispatch({type:’GET_COMMENTS_ERROR’, error:e})); //실패시
+            * }
+            * }
+            * Async/await 를 사용
+            * Const getComments = () => async (dispatch, getState) => {
+                * Const id = getState().post.activeid;
+                * dispatch({type: ‘GET_COMMENTS’});
+                * Try{
+                    * Const comments = await api.getComments(id);
+                    * dispatch({type : ‘GET_COMMENTS_SUCCESS’, id, comments});
+                * } catch (e) {
+                    * dispatch({ type: ‘GET_COMMENTS_ERROR’, error : e});
+                * }
+            * }
+    5. Redux-thunk로 프로미스 다루기
+        * 가짜 API 함수 만들기
+            * 1. Promise를 사용하여 데이터를 반환하는 가짜 API 함수를 만들기
+            * 2. Posts 리덕스 모듈 준비
+            * 3. 리덕스 모듈 리팩토링하기
+            * 4. 포스트 목록 구현하기
+            * 5. 리액트 라우터 적용
+            * 6. 포스트 조회하기
+            * -> learn-redux-middleware 참고 :)
