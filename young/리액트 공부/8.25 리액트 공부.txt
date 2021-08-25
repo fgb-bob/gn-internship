@@ -1,0 +1,208 @@
+리액트 공부(8.25)
+
+6. API 재로딩 문제 해결하기
+    * 포스트 목록 재로딩 문제 해결하기
+        1. 첫번째 : 만약 데이터가 이미 존재 한다면 요청을 하지 않도록 하는 방법
+            * Containers/PostListContainer
+            * Ex) useEffect(() => {
+                    * if(data) return;
+                    * dispatch(getPosts());
+                * }, [data, dispatch]);
+        * -> 이렇게 하고나면 포스트 목록이 이미 있는데 재로딩하는 이슈를 수정할 수있습니다.
+        * 두번째 : 로딩을 새로하긴 하는데, 로딩중… 을 띄우지 않는 것입니다.
+            * 두번째 장점은 사용자에게 좋은 경험을 제공하면서도 뒤로가기를통해 다시 포스트 목록을 조회 할 때 최신 데이터를 보여줄 수있다는 것입니다.
+            * handleAsyncActions = ( type, key, keepData = false) 에
+            * keepData를 준다. 
+            * Case type : 
+                * Return {
+                    * …state,
+                    * [key] : reducerUtils.loading(keepData ? state[key].data : null)
+                * };
+            * keepData라는 파라미터를 추가하여 만약 이 값이 true로 주어지면 로딩을 할 때에도 데이터를 유지할 수있도록 수정을 해주었습니다.
+            * Containers/PostListContainer.js
+                * If ( loading && !data ) return <div>로딩중…</div>
+    * 포스트 조회시 재로딩 문제 해결하기
+        * 특정 포스트를 조회하는 과정에서 재로딩 문제를 해결하려면, 방금 했던 방식으로는 처리할 수 없음.
+        * 어떤 파라미터가 주어졌냐에 따라 다른 결과물이 있기 때문
+        * 문제를 해결하는 두 가지 방식이 있다.
+        * 1. 첫번째 : 컴포넌트가 언마우트될 때 포스트 내용을 비우도록 하는 것
+        * 이 작업을 하려면 posts 리덕스 모듈에 CLEAR_POST 라는 액션을 준비해주어야 합니다.
+        * //포스트 비우기
+        * Ex) const CLEAR_POST = ‘CLEAR_POST’;
+        * Export const clearPost = () => ({type: CLEAR_POST});
+        * PostContainer 컴포넌트의 useEffect 의 cleanup 함수에서 해당 액션을 디스패치해주면됩니다.
+        * Ex) useEffect(() => {
+                * dispatch(getPost(postId));
+                * Return () => {
+                    * dispatch(clearPost());
+                * };
+            * }, [postId, dispatch]);
+        * 이미 읽었던 포스트를 불러오려고 할 경우에도 새로 요청을 함. 이 문제를 개선하려면, posts 모듈에서 관리하는 상태의 구조를 바꿔야한다.
+7. Thunk에서 라우터 연결하기
+    * customHistory 만들어서 적용하기
+        * Thunk 에서 라우터의 history 객체를 사용하려면, browserhistory 인스턴스를 직접 만들어서 적용해야한다.
+        * Import { createBrowserHistory }. from ‘history’;
+        * Const customHistory = createBrowserHistory();
+        * Const store = createStore(
+            * rootReducer,
+            * //logger를 사용하는 경우, logger 가 가장 마지막에 와야합니다.
+            * composeWithDevTools(applyMiddleware(ReduxThunk, logger))
+        * <Router history={customHistory}></Router>
+        * -> redux-thunk의 withExtraArgument 를 사용하면 thunk함수에서 사전에 정해준 값들을 참조할 수 있습니다.
+    * 홈 화면으로 가는 thunk 만들기
+        * Ex) export const goToHome = () => (dispatch, getState, {history}) => {
+                * history.push(‘/‘);
+            * };
+        * PostContainer.js
+        * <button onClick={() => dispatch(goToHome())}>홈으로 이동</button>
+        * -> 실제프로젝트에서는 getState()를 사용하여 현재 리덕스 스토어의 상태를 확인하여 조건부로 이동을 하거나, 특정 API를 호출하여 성공했을 시에만 이동하는 형식으로 구현할 수있습니다.
+8.  Json-server
+    * Json-server 도구를 사용하여 json 파일 하나만 있으면 연습용 서버를 쉽게 구성할 수 있습니다.
+    * 1. 프로젝트 디렉터리 ( src 디렉터리 밖에 ) data.json 파일 생성 (post 배열에 객체로 포스트형식 저장)
+    * 2.  Npx json-server ./data.json —port 4000 
+        * data.json 파일을 기반으로 서버를 연다는 뜻
+            * 다른 방법
+            * Yarn global add json-server
+            * Json-server ./data.json —port 4000
+    * -> 가짜 API 서버가 4000 포트로 열립니다. Localhost:4000/posts 로 들어가서 확인
+    * 3. Axios 를 사용하여 API 요청하기
+        * 1. 프로젝트에 Rest API Client인 axios 설치
+            * Yarn add axios
+        * 2. Api/posts.js 파일 수정
+            * Ex)
+            * Import axios from ‘axios’;
+            * Export const getPosts = async () => {
+                * Const response = await axios.get(‘http://localhost:4000/posts');
+                * Return response.data;
+            * };
+            * Export const getPostById = asyncc id => {
+                * Const response = await axios.get(`http://localhost:4000/posts/${id}`);
+                * Return response.data;
+            * };
+9. CORS 와 Webpack DevServer Proxy
+    * 브라우저에서 기본적으로 API 를 요청 할 때에는 브라우저의 현재 주소와 API의 주소의 도메인이 일치해야만 데이터를 접근 할 수있게 되어 있습니다. 만약 다른 도메인에서 API를 요청해서 사용 할. 수있게 해주려면 CORS 설정이 필요합니다.
+    * Json-server로 만든 서버의 경우엔 모든 도메인을 허용해주는 CORS 규칙이 적용되어 있습니다.
+    * 서버의 API를 요청해야 할 때, 기본적으로는 localhost:3000 에서 들어오는 것이 차단되기 때문에 서버 쪽에 해당 도메인을 허용하도록 구현을 해야합니다.
+    * 웹팩 개발서버에서 제공하는 Proxy 라는 기능이 있기 때문에 그럴 필요 없다.
+    * Proxy 설정하기
+        * 웹팩 개발서버의 프록시를 사용하게 되면, 브라우저 API 를 요청할 때 백엔드 서버에 직접적으로 요청하지 않고 현재 개발서버의 주소로 요청을 하게 됩니다.
+        * 그러면 웹팩 개발 서버에서 해당 요청을 받아 그대로 백엔드 서버로 전달하고, 백엔드 서버에서 응답한 내용을 다시 브라우저 쪽으로 반환합니다.
+        * 웹팩 개발서버의 proxy 설정은 원래 웹팩 설정을 통해서 적용을 하지만, CRA를 통해 만든 리액트 프로젝트에서는 package.json에서 “proxy” 값을 설정하여 쉽게 적용 할 수 있습니다.
+        * Package.json 을 열어서 proxy 값 설정
+        * Ex) “proxy” : http://localhost:4000”
+        * 그 다음, api/posts.js 파일을 열어서 http://localhost:4000/posts 대신에 /posts URL로 요청을 하도록 하면된다. 이렇게 요청하는 주소의 도메인이 생략된 경우엔 현재 페이지의 도메인(지금의 경우 http://localhost:3000)을 가르기케 됩니다.
+        * Ex)
+        * Import axios from ‘axios’;
+        * Export const getPosts = async () => {
+            * Const response = await axios.get(‘/posts’);
+            * Return response.data;
+        * };
+        * Export const getPostById = async id => {
+            * Const response = await axios.get(`/posts/${id}`);
+            * Return response.data;
+        * };
+        * -> 리액트로 만든 서비스와 API가 동일한 도메인에서 제공이 되는 경우 이대로 진행을 하면 된다. 하지만, 만약에 API의 도메인과 서비스의 도메인이 다르다면 ( 예 : 서비스는 velog.io, API는 api.velog.io), axios의 글로벌 baseURL을 설정하면 됩니다.
+        * Ex ) axios.defaults.baseURL = process.env.NODE_ENV === ‘development’ ? ‘/‘ : ‘https://api.velog.io/';
+            * -> process.env.NODE_ENV는 현재 환경이 프로덕션인지 개발모드인지 볼 수 있는 값
+            * 위와 같은 설정을 하게 된다면, 개발 환경에선 프록시 서버 쪽으로 요청하고, 프로덕션에선 실제 API 서버로 요청을 하게 됩니다. 이러한 설정은 아까 언급한것처럼 API 도메인이 실서비스의 도메인과 다를때만 하시면 됩니다.
+10. Redux-saga
+    * 액션을 모니터링하고 있다가, 특정 액션이 발생하면 이에 따라 특정 작업을 하는 방식으로 사용합니다.
+    * 여기서 특정 작업이란, 특정 자바스크립트를 실행하는 것 일수도 있고, 다른 액션을 디스패치하는 것일수도 있고, 현재 상태를 불러오는 것일 수도 있습니다.
+    * Redux-saga는 Redux-thunk가 못하는 다양한 작업들을 처리 할 수있습니다.
+        * 1. 비동기 작업을 할 때 기존 요청을 취소 처리 할 수있습니다.
+        * 2. 특정 액션이 발생했을 때 이에 따라 다른 액션이 디스패치되게끔 하거나, 자바스크립트 코드를 실행 할 수 있습니다.
+        * 3. 웹소켓을 사용하는 경우 Channel 이라는 기능을 사용하여 더욱 효율적으로 코드를 관리 할 수 있습니다. 
+        * 4. API 요청이 실패했을 때 재 요청하는 작업을 할 수 있습니다.
+    * redux-saga는 generator 문법을 사용한다
+    * Generator 문법 배우기
+        * 이 문법의 핵심 기능은 함수를 작성 할 때 함수를 특정 구간에 멈춰놓을 수도 있고, 원할 때 다시 돌아가게 할 수도 있습니다. 그리고 결과값을 여러번 반환 할 수도 있습니다.
+        * Ex)
+        * Function weirdFunction(){
+            * Return 1;
+            * Return 2;
+            * Return 3;
+            * Return 4;
+            * Return 5;
+        * }
+        * -> 함수에서 값을 여러번에 걸쳐서 반환하는 것은 불가능 합니다. ( 이 함수는 호출 할 때마다 무조건 1을 반환하게 될 것입니다. )
+        * -> 하지만, 제네레이터 함수를 사용하면 함수에서 값을 순차적으로 반환할 수 있습니다. 함수의 흐름을 도중에 멈춰놓았다가 나중에 이어서 진행 할 수도 있습니다.
+        * Function* generatorFunction() {
+            * Console.log(‘안녕하세요’);
+            * Yield 1;
+            * Console.log(‘제네레이터 함수’);
+            * Yield 2;
+            * console.log(‘function*’);
+            * Yield 3;
+            * Return 4;
+        * }
+        * -> 제네레이터 함수를 만들 때에는 function* 이라는 키워드를 사용합니다.
+        * 제네레이터 함수를 호출했을 때는 한 객체가 반환되는데, 이를 제네레이터라고 부릅니다.
+        * next를 호출할 때 인자를 전달하여 이를 제네레이터 함수 내부에서 사용할 수도 있습니다.
+    * Generator로 액션 모니터링하기
+        * function* watchGenerator() {
+            * console.log(‘모니터링 시작!’);
+            * while(true){
+                * Const action = yield;
+                * if( action.type === ‘HELLO’){
+                    * console.log(‘안녕하세요?’);
+                * }
+                * if( action.type === ‘BYE’ ) {
+                    * console.log(‘안녕히가세요’);
+                * }
+            * }
+        * }
+        * Const watch = watchGenerator();
+        * Watch.next();, watch.next({type: ‘HELLO’});
+        * 리덕스 사가 설치 및 비동기 카운터 만들기
+        * Redux-saga/effects 에 다양한 유팅함수들이 들어있습니다. 여기서 사용한 put 이란 함수를 통하여 새로운 액션을 디스패치할 수 있습니다.
+        * takeEvery : 액션을 모니터링하는 함수, 특정 액션 타입에 대하여 디스패치되는 모든 액션들을 처리하는 것
+        * takeLatest : 특정 액션 타입에 대하여 디스패치된 가장 마지막 액션만을 처리하는 함수입니다.
+        * -> 예를 들어서 특정 액션을 처리하고 있는 동안 동일한 타입의 새로운 액션이 디스패치되면 기존에 하던 작업을 무시 처리하고 새로운 작업을 시작합니다.
+11. Redux-saga 로 프로미스 다루기
+    * Redux-thunk를 배울 때 사용했던 thunk 함수를 다시 확인
+        * Export const getPosts = () => async dispatch => {
+            * dispatch({type: GET_POSTS}); //요청이 시작됨
+            * Try{
+                * Const posts = postsAPI.getPosts(); //API 호출
+                * dispatch({ type: GET_POSTS_SUCCESS, posts}); //성공
+            * } catch(e) {
+                * dispatch({type: GET_POSTS_ERROR, error: e}); //실패
+            * }
+        * };
+12. saga에서 라우터 연결하기
+    * 예를 들어 로그인 요청을 할 때 성공 할 시 특정 주소로 이동시키고, 실패 할 시엔 그대로 유지하는 기능을 구현 해야 된다면, 컨테이너 컴포넌트에서 withRouter를 사용해서 구현하는 것보다 사가 내부에서 처리를 하는 것이 훨씬 편합니다.
+    * 구현 방식은 redux-thunk에서 했던 방식과 비슷하다. 미들웨어를 만들 때 context를 설정해주면 추후 사가에서 getContext 함수를 통해 조회 할 수 있습니다.
+    * sagaMiddleware = createSagaMiddleware({
+        * Context : {
+            * History : customHistory
+        * }
+    * }); //사가 미들웨어를 만듭니다.
+    * Learn-redux-middleware 실습 폴더 참조 :)
+JavaScript의 가변성과 불변성
+javaSciprt 객체의 가변성을 막는 두가지 방법
+	1. Object.freeze - 하지만, 객체 안에 있는 객체까지 얼려버리지는 않는다.
+	2. Immutable.js 라이브러리 - 객체를 마치 불변인것 처럼 다룰 수 있는 방법을 제공
+* 얕은 복사 : 중첩된 객체 구조를 복사할 때, 안에 있는 객체와 그 안 원시 타입들까지 복사해서 저장하는 것이 	아니라, 그 객체 주소를 가리키는 포인터만 새로 할당할 뿐
+* React state가 불변이어야 하는 이유
+    * - 컴포넌트 최적화를 위해 불변함을 유지해야한다
+* React 가 화면을 업데이트 하는 과정
+    * 1.. setState를 호출
+    * 2. shouldComponentUpdate 를 실행했는데 false를 리턴하면 여기서 멈추고, true를 리턴하면 다음 단계로 이동
+    * 3. 가상 DOM과 실제 DOM을 비교해서 변경사항이 있으면 화면을 다시 그린다.
+    * 컴포넌트에서 shouldComponentUpdate 함수를 구현하지 않으면 기본값으로 true를 리턴한다. 
+    * 특정 컴포넌트가 업데이트를 할 필요가 없다는 것을 어떻게 판단할 수 있을까?
+    * -> 가장 간단한 방법은 컴포넌트가 갖고 있는 데이터(props, state)의 이전 이후 값을 완전히(깊이) 비교하는 것!
+    * 가변객체일 경우
+    * -> todos 모델 객체에서 관리하는 todo객체와 prop 속성으로 전달된 todo 객체이 참조가 동일하기 떄문에 항상 참이 되므로 의도한 결과를 얻을 수 없다.
+    * 불변 객체일 경우
+    * -> 객체의 상태가 변경될 때만 새로운 객체가 생성되므로 참조가 달라진다. 따라서 단순히 참조만 비교하는 것 만으로도 객체의 상태가 변경됐는지 판단할 수 있다.
+    * 불변 객체를 복사할 때는 항상 같은 객체를 참조하는 주소만 반환하면 된다. 동일한 값을 여러번 복사해도 참조를 위한 포인터 크기 만큼만 메모리가 늘어날뿐, 그리고 내용이 바뀌면 그때 새로운 객체를 할당하게 되는것. 이처럼 불변 객체는 복사를 단순화할 수 있어 성능적으로 유리할 수있다.
+    * Immutable.js 를 사용하면 이러한 작업을 훨씬 빠르고 쉽게 할 수 있다.
+    * immutable의 규칙, 객체는 map, 배열은 list, 설정할 땐 set, 읽을 땐 get, 읽은 다음에 설정할 땐 update, 내부에 있는 걸 ~ 할 땐 뒤에 in을 붙인다. - setIn, getIn, updateIn, 일반 자바스크립트 객체로 변환할 땐 toJs, List엔 배열 내장함수와 비슷한 함수들이 있다. - push, slice, filter, sort, concat …전부 불변함을 유지함, 특정 key를 지울때 delete, List에서 원소를 지울때 도 delete
+* 상태 관리 적용
+    * Record를 사용하면 immutable의 set, update, delete등을 계속 사용할 수있으면서도, 값을 조회 할 때 get,getIn 을 사용 할 필요없이, data.input 이런식으로 조회할 수 있다.
+    * Ex) const Person = Record({
+            * Name : ’Siots’,
+            * Age: 1
+        * });
+        * Let person = Person();
