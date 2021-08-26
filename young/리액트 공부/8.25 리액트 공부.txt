@@ -206,3 +206,260 @@ javaSciprt 객체의 가변성을 막는 두가지 방법
             * Age: 1
         * });
         * Let person = Person();
+
+const Person = Record({
+	name : ‘Siots',
+	age : 1
+});
+
+ 
+
+let person = Person();
+
+//값을 따로 지정해줄수도 있습니다.
+
+person = Person({
+	name : 'Ria',
+	age : 20
+});
+
+const { name, age } = person; // 비구조화 할당
+
+//재생성 할 일이 없다면 이렇게 해도 됩니다.
+
+const member = Record({
+	name : 'Luna',
+	age : 20
+})()
+
+const nested = Record({
+	foo : Record({
+	bar:true
+})()
+})();
+
+console.log(nested.foo.ber); // true
+
+//Map
+const nextNested = nested.setIn(['foo','bar']);
+
+-Immer 사용법
+1. npm install immer
+
+2.import produce from 'immer'
+
+const baseState = [
+{
+	todo : "Learn typescript",
+	done : true
+},
+{
+	todo : "Try immer",
+	done : false
+}
+}
+
+const nextState = produce(baseState, draftState => {
+	draftState.push({ todo: "Tweet about it" })
+	draftState[1].done = true
+})
+
+- immer에서 오직 신경써야 할 것은 produce 함수 뿐!
+
+produce(currentState, producer : (draftState) => void) : nextState
+
+* 생산(produce)함수는 두 개의 인자를 받는다.
+* currentState(현재 상태), producer(생산자) 함수
+
+currentState는 우리의 시작점을 결정하고 producer(생산자)는 무슨 일이 발생해야 하는 지를 표현한다.
+producer함수는 현재 상태의 대신하는 draft를 인자로 받는다.
+draft에 가해지는 어떠한 수정이라도 기록되고 nextState(다음상태)를 만들어 내는데 사용된다. currentState는 이 과정 중에서 본래 상태를 유지하게 된다.
+
+ex) 전형적인 리덕스의 리듀스 코드
+
+const byId = (state, action ) => {
+	swich(action.type) {
+	case RECEIVE_PRODUCTS :
+		return {
+			...state,
+			...action.products.reduce((obj, product) => {
+			obj[product.id] = product
+			return obj
+		},{})
+	}
+
+	default :
+		return state
+}
+}
+
+ex) immer의 producer를 이용한 리듀서
+
+const byId = (state, action) =>
+	produce(state, draft => {
+	switch (action.type) {
+	case RECEIVE_PRODUCTS:
+		action.products.fotEach(product => {
+		draft[product.id] = product
+	})
+	break
+	}
+})
+
+-> default 케이스에 대한 처리가 필요가 없어졌다. 드래프트에 변경을 가하지 않으면 기본상태가 그대로 반환되니까.
+
+- Refresh JWT 구현을 위한 배경지식과 설계
+
+- Bearer Authentication 이란
+
+API에 접속하기 위해서는 access token을 API 서버에 제출해서 인증해야 합니다. 이때 사용하는 인증방법이 Bearer Authentication입니다.
+
+- 현재 클라이언트에서 헤더에 토큰을 보내는 코드
+
+ex)
+
+axios.get("http://localhost:8080/onlynormal", {
+	headers: {
+		"Authorization : "Bearer" +this.state
+	}
+})
+
+- JWT을 사용하는 Bearer를 선택한 이유
+
+안전하지않다.
+
+인증 표준이 아니다.
+
+확장성이 매우높다. 페이스북 계정으로 로그인과 같은 기능이 구현되어있다.
+
+자체 암호화를 지원하지 않기 때문에 https를 쓰는 것을 권고하고 있다.
+
+https관련 비용 문제를 해결하고 나서 변경해도 괜찮을 것 같다는 판단.
+
+jwt는 사용사례가 많고, 잘 만들어진 라이브러리, 예제 등 이 잘 준비되어 있다.
+
+DB 단에서 사용자와 매핑한 랜덤 문자열이나, 사용자 ID 자체가 인코딩된 문자열을 쓰는 등의 방식.
+
+ 
+
+구체적인 refresh token 구현 방법
+
+- server side
+
+1. acces token과 refresh token 발급
+
+2. redis 블랙리스트에 해당 토큰의 존재여부 확인(로그아웃 했을수도 있으니)
+
+3. access token은 30분, refresh token 은 일주일
+
+4. access token은 username을 payload에 가지고 필요할 때마다 파싱해서 사용
+
+5. refresh token은 redis에 key :username, value: token 형태로 가지고 있음
+
+6. client가 refresh token redis에 key:username, value:token형태로 가지고 있음
+
+7. Client가 refresh token과 만료된 access token을 가지고 재발급 요청을 보내면,
+
+1. 만료된 토큰에서 username을 얻고(refresh tokendp user 정보를 담지 않기 위해서
+
+2. username을 key로 redis에 있는지 확인하고
+
+3. 유효기간도 확인
+
+8. 위에서 통과를 못하면 다시 로그인시켜서 refresh + access token을 처음부터 발급받게 함
+
+9. refresh token은 payload에 아무 정보도 저장하지 않고 그저 유저가 가지고 있던 것과 redis에 저장된 것이 같은지만 확인한다. 물론 변조되지 않았는지 만료되지 않았는지는 확인한다.
+
+- Client Side
+
+1. access token 은 일반 쿠키로 가지고 있다.
+
+2. refresh token 은 일반적인 쿠키보다는 안전한 곳에 가지고 있을 것.
+
+3. 가지고 있는 access token을 보내기전에 expiration date를 확인해 30초 이하로 남았으면 즉시 refresh token 과 access token을 함께 보내서 갱신 요청하기
+
+4. refresh 성공하면 기존 token은 무조건 날린다.
+
+로그아웃 정책
+
+1. 클라이언트에서는 access token과 refresh token을 모두 삭제한다.
+
+2. 서버는 access token과 refresh token을 모두 redis 블랙리스트에 올려 요청이 들어와도 주체적인 거부를 한다.
+
+ 
+
+Ducks 구조와 redux-actions 사용하기
+
+1. Ducks 구조
+
+- Ducks 구조에는 Reducer 파일 안에 액션타입과 액션생성자 함수를 함께 넣어서 관리하고 이를 ‘모듈’이라고 합니다.
+
+- 리듀서를 정의하여 export default로 내보내고, 같은 파일에서 액션생성자도 export를 통해 내보냅니다.
+
+- 서로다른 리듀서에서 액션이름이 중첩되는 것을 방지하기 위해 접두사를 달아서 만들어 줍니다.
+
+2. redux - action를 통한 더 쉬운 액션관리
+
+- createAction을 통한 액션생성 자동화
+
+ex) export const increment = (index) => ({
+	type: types.INCREMENT,
+	index
+});
+
+-> export const increment = createAction(types.INCREMENT);
+
+하지만 이런식으로 하면 그 파라미터의 값이 index 가 될지 뭐가 될지 모릅니다. 그렇기 때문에, 파라미터로 전달 받은 값을 액션의 payload값으로 설정해줍니다.
+-> { type:'INCREMENT', payload: 5 }
+
+액션이 갖고 있을 수 있는 변수를 payload로 통일하므로서, 액션을 생성하는 것을 자동화 할 수 있게 되는 것.
+ex) export const setColor = createAction(types.SET_COLOR);
+-> setColor({index : 5, color: '#fff'})
+/* 결과
+
+{
+	type : 'SET_COLOR',
+	payload : {
+		index : 5,
+		color: '#fff'
+	}
+}
+
+*/
+-> 편리하지만, 단점으로는 코드를 봤을 때 해당 액션 생성자가 파라미터로 필요한 값이 뭔지 모르기 때문에, 그 위에 주석을 작성해주어야합니다.
+
+switch 문 대신 handleActions 사용하기
+
+리듀서에서 액션의 type에 따라 다른 작업을 하기 위해서 우리는 switch 문을 사용했지만, 이 방식엔 결점으로 scope가 리듀서 함수로 설정되어 있다는 것. 그렇기 때문에 서로 다른 case에서 let이나 const를 통하여 변수를 선언하려고 하다보면 같은 이름이 중첩될 시엔 에러가 발생합니다. 이 문제를 해결해주는 것이 바로 handleAciton입니다.
+
+ex)
+
+const reducer = handleActions({
+
+INCREMENT : (state, action) => ({
+	counter : state.counter + action.payload
+	}),
+	DECREMENT : (state, action) => ({
+	counter : state.counter - action.payload
+	})
+}, {counter : 0 });
+
+-> 첫 번째 파라미터로는 액션에 따라 실행 할 함수들을 가지고 있는 객체, 두 번째 파라미터로는 상태의 기본값(initialState)를 넣어주면 됩니다.
+
+3. 적용하기
+
+//액션 생성자
+export const create = createAction(CREATE);
+
+//초기 상태를 정의합니다.
+
+const initailState = Map({
+	counters : List([
+	Map({color : ' black', number: 0 })
+	])
+});
+
+export default handleActions({
+[CREATE] : (state, action) => state,
+[REMOVE] : (state, action) => state,
+), initialState);
