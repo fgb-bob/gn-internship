@@ -115,3 +115,15 @@ function PostListContainer() {
 export default PostListContainer;
 
 7. redux-thunk로 프로미스 다루기 코드.. 전체적으로 이해x
+lib/asyncUtil.js 코드가 정말 이해 안됨.
+
+1. export const createPromiseSaga promiseCreator가 뭔지
+2. 여기서 return 하는 payload가 뭔지.
+3. const payload = await PromiseCreator(param)에 들어가는 값은 무엇인지
+4. reducerUtils 객체에 이 코드는 무슨 동작을 하는지.. 
+inital 안에는 어떠한 값이 들어가는 것인지. 함수가 들어가는 것인지. 객체가 들어가는 것인지. 
+	initial : (initialData = null ) => ({
+		loading: false,
+		data: initialData,
+		error: null
+	})
