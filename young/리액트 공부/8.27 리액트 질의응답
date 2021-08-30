@@ -1,0 +1,129 @@
+1.
+reducer 함수에서 state를 어디서 받아오는지. 
+reducer(state, action) 에서 인자를 어떻게 전달받아오는건지
+return 값이 const[state, dispatch] 에 있는 state에 저장되는건지
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'LOADING':
+    return {
+      loading: true,
+      data: null,
+      error: null
+    };
+    case 'SUCCESS':
+      return {
+      loading: false,
+      data: action.data,
+      error: null
+    };
+    case 'ERROR':
+      return {
+      loading: false,
+      data: null,
+      error: action.error
+    };
+    default:
+      throw new Error(`Unhandled action type: ${action.type}`);
+  }
+}
+ 
+function Users() {
+const [state, dispatch] = useReducer(reducer, {
+  loading: false,
+  data: null,
+  error: null
+});
+
+
+2. return ();
+return { } ;
+retrun () => { unblock() }  의 차이점?? 각각 어떤 상황에 사용되는지 구분을 잘 못하겠음
+
+3. 
+function increase() {
+    return{
+     type : INCREASE
+    }
+  };
+}
+ 
+const decrease = () => ({ type : DECREASE });
+
+둘이 같은 코드라고 하는데, 
+-> 여기서는 왜 소괄호 안에 중괄호가 들어가는지..
+소괄호가 왜 사용되는것인지.. 소괄호의 의미를 잘 모르겠다.
+
+4. 
+
+/* 리덕스에서 관리 할 상태 정의 */
+const initialState = {
+  counter: 0,
+  text: '',
+  list: []
+};
+ 
+function reducer(state = initialState, action) {
+  switch (action.type) {
+    case INCREASE:
+      return {
+        ...state,
+        counter: state.counter + 1
+      }
+// counter : state.counter + 1에서, counter는 state.counter라고 안해도되는건지 궁금.
+왜 안해도 되는건지 궁금
+앞은 state. 안써주면서 뒤에는 왜 쓰는지 궁금.
+
+
+5.
+export const  handleAsyncActions = (type, key) => {
+const [SUCCESS, ERROR] = [`${type}_SUCCESS`, `${type}_ERROR`];
+switch (aciton. type) => {
+	...state,
+	[key] : reducerUtils.error(action.payload) //[key] 이게 무슨뜻
+}
+
+return hadleAsyncActions(GET_POST, 'post')(state, action); // 이게 무슨 뜻인지. . 
+
+6.
+const { data, loading, error } = useSelector(state => state.posts.posts);
+-> useSelector 파라미터 안에 있는 state는 어디에서 전달받아 온건지..
+이름이 state 인건 어떻게 확인하고, state 이름을 바꾸고 싶으면 어떻게 해야하는건지...
+
+-> useSelector이 사용된코드
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import PostList from '../components/PostList';
+import { getPosts } from '../modules/posts';
+
+function PostListContainer() {
+  const { data, loading, error } = useSelector(state => state.posts.posts);
+  const dispatch = useDispatch();
+
+  // 컴포넌트 마운트 후 포스트 목록 요청
+  useEffect(() => {
+    if (data) return;
+    dispatch(getPosts());
+  }, [data, dispatch]);
+
+  if (loading) return <div>로딩중...</div>;
+  if (error) return <div>에러 발생!</div>;
+  if (!data) return null;
+  return <PostList posts={data} />;
+}
+
+export default PostListContainer;
+
+7. redux-thunk로 프로미스 다루기 코드.. 전체적으로 이해x
+lib/asyncUtil.js 코드가 정말 이해 안됨.
+
+1. export const createPromiseSaga promiseCreator가 뭔지
+2. 여기서 return 하는 param  뭔지.
+3. const payload = await PromiseCreator(param)에 들어가는 값은 무엇인지
+4. reducerUtils 객체에 이 코드는 무슨 동작을 하는지.. 
+inital 안에는 어떠한 값이 들어가는 것인지. 함수가 들어가는 것인지. 객체가 들어가는 것인지. 
+	initial : (initialData = null ) => ({
+		loading: false,
+		data: initialData,
+		error: null
+	})
