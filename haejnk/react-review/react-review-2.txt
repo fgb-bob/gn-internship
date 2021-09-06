@@ -1,0 +1,72 @@
+- useState 함수.
+
+기본 형태.
+
+```jsx
+const [nowState, SetterFn] = useState(initialValue)
+```
+
+nowState : 현재 상태.
+
+SetterFn : 현재 상태를 변경시킬 수 있는 설정 함수.
+
+initialValue : 기본 설정값.
+
+이 함수의 역할은, 어떤 값과 해당 값의 상태를 변경시키는 설정 함수를 한 번에 선언하는 역할을 해준다.
+
+이 함수가 import 되었다는 것은, 코드 내에서 상태 변화가 필요한 어떤 값을 사용한다는 의도를 갖고 있다고 볼 수 있다.
+
+- useRef 함수
+
+이 함수는 두가지 용도로 사용된다.
+
+1. 특정 DOM 선택.
+2. 어떤 컴포넌트 안에서 조회 및 수정 할 수 있는 변수 관리.
+
+-1 특정 DOM 을 선택할 때에는, 
+
+useRef 객체를 생성한 뒤, 
+
+선택하고자 하는 컴포넌트의 ref 속성으로 해당 객채를 값으로 부여해주고,
+
+함수와 같은 기능을 통하여 원하는 작업을 current 에 담긴 선택된 컴포넌트에게 지시할 수 있다.
+
+```jsx
+const target = useRef(); // 객체 생성.
+...
+function click() {
+	target.current.focus(); // 현재 타겟에 focus 부여.
+}
+...
+<TargetComponent ref={target} /> 
+... // 위의 컴포넌트에 ref 속성 설정.
+<button onClick={() => click()} >ClickMe</button>
+// 버튼에 클릭 이벤트로 타겟 선택.
+```
+
+-2 어떤 컴포넌트 안에서 조회 및 수정 할 수 있는 변수를 관리하는 경우.
+
+useRef 객체를 생성할 때 기본값을 파라미터로 설정해주면,
+
+코드 내에서 자유롭게 조회 가능하고, 또 수정이 용이하다.
+
+```jsx
+[
+	...
+	},
+	{
+		id: 1,
+		text: "text",
+		title: "title"
+	},
+	...
+];
+const nextId = useRef(5);
+...
+function inCreaseId() {
+	...
+	nextId.current += 1;
+}
+```
+
+예를 들면, 사용자 배열이 있고, 해당 사용자이 id 값을 관리해야 하는 경우, 위와 같이 사용 가능.

@@ -1,0 +1,101 @@
+- useEffect 함수.
+
+(패턴 파악하기).
+
+-1 마운트 할 때 (나타날 때) 실행.
+
+그렇게 되면 끼치는 영향은, 
+
+마운트 할 때에는 보통 두번째 파라미터를 비워서 함수를 렌더링 할 때마다 함수를 한 번씩 실행을 하게 만든다.
+
+그런데 그렇게 되면, 
+
+렌더링을 할 때 변경되는 값은 없다.
+
+-2 업데이트 할 때 실행.
+
+두번째 파라미터에 의존값이라는 녀석을 설정해 주면, 컴포넌트가 처음 마운트 될 때, 
+
+그리고 의존값으로 설정한 값이 변경될 때에도 
+
+함수가 호출이 된다.
+
+-3 언마운트 (사라질 떄) 또는 업데이트 되기 직전에 실행하는 함수.
+
+return 으로 특정 함수를 반환하면 cleanup 함수로서 업데이트 하기 전에 호출하게 된다.
+
+[[JavaScript] React - useEffect 를 사용한 마운트, 언마운트 업데이트 시의 작업](https://velog.io/@sji7532/JavaScript-React-useEffect-%EB%A5%BC-%EC%82%AC%EC%9A%A9%ED%95%9C-%EB%A7%88%EC%9A%B4%ED%8A%B8-%EC%96%B8%EB%A7%88%EC%9A%B4%ED%8A%B8-%EC%97%85%EB%8D%B0%EC%9D%B4%ED%8A%B8-%EC%8B%9C%EC%9D%98-%EC%9E%91%EC%97%85)
+
+기본 형태. 1.
+
+```jsx
+useEffect(() => { Func }, []);
+//
+useEffect(() => {
+	showUpFnc
+}, []);
+```
+
+showUpFnc : 컴포넌트가 처음 나타났을 때 특정 작업을 처리하는 함수.
+
+어떤 작업? → 개발자 지정 (요구사항? 지시사항?).
+
+기본 형태. 2.
+
+```jsx
+useEffect(() => { Func }, [deps]);
+//
+useEffect(() => {
+	updateFnc
+}, [deps]);
+```
+
+updateFnc : 컴포넌트가 업데이트 될 때 특정 작업을 처리하는 함수.
+
+deps : 종속 배열. dependency 를 의미. 의존값. → 함수가 값에 의존하고 있다.
+
+기본 형태. 3.
+
+```jsx
+useEffect(() => { Func return; });
+//
+??
+```
+
+cleanup() 함수.
+
+return 문 뒤에 넣어준다.
+
+( useEffect 함수가 사용되는 코드의 의도는, 
+
+어떤 컴포넌트의 나타남, 업데이트, 사라짐의 상황에 어떤 기능을 수행하려는 의도가 있다고 볼 수 있을 것 같다.)
+
+- useMemo 함수.
+
+메모이제이션 된 값을 반환한다.
+
+특정 결과 값을 재사용할 때 사용.
+
+기본 형태.
+
+```jsx
+useMemo(() => { createFn }, [deps]);
+```
+
+createFn : "값을 만드는" 함수
+
+deps : 종속 배열. → 
+
+- useCallback 함수.
+
+특정 함수를 재사용할 때 사용. 
+
+```jsx
+useCallback(() => Fn, [deps]);
+```
+
+# 참고.
+
+메모이제이션.
+
+[메모이제이션 - 위키백과, 우리 모두의 백과사전](https://ko.wikipedia.org/wiki/%EB%A9%94%EB%AA%A8%EC%9D%B4%EC%A0%9C%EC%9D%B4%EC%85%98#)
